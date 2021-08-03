@@ -6,28 +6,30 @@ import time
 import datetime
 import h5py
 from typing import Union, List, Dict
-from .helpers import save_pkl_object
+import pickle
 
 
 class MLELogger(object):
     """
-    Logging object for Deep Learning experiments
+    Logging object for Machine Learning experiments
 
     Args:
+        ======= TRACKING AND PRINTING VARIABLE NAMES
         time_to_track (List[str]): column names of pandas df - time
         what_to_track (List[str]): column names of pandas df - statistics
         time_to_print (List[str]): columns of time df to print out
         what_to_print (List[str]): columns of stats df to print out
+        ======= TRACKING AND PRINTING VARIABLE NAMES
         config_fname (str): file path of configuration of experiment
         experiment_dir (str): base experiment directory
-        seed_id (str): seed id to distinguish logs with
+        seed_id (str): seed id to distinguish logs with (e.g. seed_0)
         overwrite_experiment_dir (bool): delete old log file/tboard dir
         ======= VERBOSITY/TBOARD LOGGING
-        print_every_k_updates (int): after how many log updates - verbose
         use_tboard (bool): whether to log to tensorboard
-        tboard_fname (str): base name of tensorboard
+        log_every_j_steps (int): steps between log updates
+        print_every_k_updates (int): after how many log updates - verbose
         ======= MODEL STORAGE
-        model_type (str): ["torch", "jax", "sklearn"] - tboard/storage
+        model_type (str): ["torch", "jax", "sklearn", "numpy"]
         ckpt_time_to_track (str): Variable name/score key to save
         save_every_k_ckpt (int): save every other checkpoint
         save_top_k_ckpt (int): save top k performing checkpoints
@@ -43,10 +45,9 @@ class MLELogger(object):
         what_to_print: Union[List[str], None] = None,
         config_fname: str = "base_config.json",
         experiment_dir: str = "/",
-        seed_id: str = "no_seed",
+        seed_id: str = "no_seed_provided",
         overwrite_experiment_dir: bool = False,
         use_tboard: bool = False,
-        tboard_fname: Union[str, None] = None,
         log_every_j_steps: Union[int, None] = None,
         print_every_k_updates: Union[int, None] = None,
         model_type: str = "no-model-type-provided",
@@ -60,6 +61,8 @@ class MLELogger(object):
         self.log_update_counter = 0
         self.log_save_counter = 0
         self.model_save_counter = 0
+        self.extra_save_counter = 0
+        self.extra_storage_paths: List[str] = []
         self.fig_save_counter = 0
         self.fig_storage_paths: List[str] = []
 
@@ -87,7 +90,6 @@ class MLELogger(object):
             config_fname,
             seed_id,
             use_tboard,
-            tboard_fname,
             overwrite_experiment_dir,
         )
 
@@ -124,33 +126,37 @@ class MLELogger(object):
         config_fname: str,
         seed_id: str,
         use_tboard: bool = False,
-        tboard_fname: Union[str, None] = None,
         overwrite_experiment_dir: bool = False,
     ) -> None:
         """Setup a directory for experiment & copy over config."""
         # Get timestamp of experiment & create new directories
-        timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:] + "_"
-        base_str = os.path.split(config_fname)[1].split(".")[0]
-        self.base_str = base_str
-        self.experiment_dir = os.path.join(base_exp_dir, timestr + base_str + "/")
+        timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
+        if config_fname is not None:
+            self.base_str = "_" + os.path.split(config_fname)[1].split(".")[0]
+            self.experiment_dir = os.path.join(base_exp_dir, timestr + self.base_str + "/")
+        else:
+            self.base_str = ""
+            self.experiment_dir = base_exp_dir
 
         # Create a new empty directory for the experiment
         os.makedirs(self.experiment_dir, exist_ok=True)
         os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
 
-        exp_time_base = self.experiment_dir + timestr + base_str
+        exp_time_base = self.experiment_dir + timestr + "_" + self.base_str
         self.config_copy = exp_time_base + ".json"
-        if not os.path.exists(self.config_copy):
+        if not os.path.exists(self.config_copy) and config_fname is not None:
             shutil.copy(config_fname, self.config_copy)
 
         # Set where to log to (Stats - .hdf5, model - .ckpth)
         self.log_save_fname = (
-            self.experiment_dir + "logs/" + timestr + base_str + "_" + seed_id + ".hdf5"
+            self.experiment_dir + "logs/" + timestr
+            + self.base_str + "_" + seed_id + ".hdf5"
         )
 
         # Create separate filenames for checkpoints & final trained model
         self.final_model_save_fname = (
-            self.experiment_dir + "models/final/" + timestr + base_str + "_" + seed_id
+            self.experiment_dir + "models/final/" + timestr
+            + self.base_str + "_" + seed_id
         )
         if self.save_every_k_ckpt is not None:
             self.every_k_ckpt_list: List[str] = []
@@ -158,7 +164,7 @@ class MLELogger(object):
                 self.experiment_dir
                 + "models/every_k/"
                 + timestr
-                + base_str
+                + self.base_str
                 + "_"
                 + seed_id
                 + "_k_"
@@ -169,7 +175,7 @@ class MLELogger(object):
                 self.experiment_dir
                 + "models/top_k/"
                 + timestr
-                + base_str
+                + self.base_str
                 + "_"
                 + seed_id
                 + "_top_"
@@ -192,27 +198,31 @@ class MLELogger(object):
                     shutil.rmtree(self.experiment_dir + "tboards/")
 
         # Initialize tensorboard logger/summary writer
-        if tboard_fname is not None and use_tboard:
+        if use_tboard:
             try:
                 from torch.utils.tensorboard import SummaryWriter
             except ModuleNotFoundError as err:
                 raise ModuleNotFoundError(
                     f"{err}. You need to install "
                     "`torch` if you want that "
-                    "DeepLogger logs to tensorboard."
+                    "MLELogger logs to tensorboard."
                 )
             self.writer = SummaryWriter(
-                self.experiment_dir + "tboards/" + tboard_fname + "_" + seed_id
+                self.experiment_dir + "tboards/" + timestr
+                + self.base_str
+                + "_"
+                + seed_id
             )
         else:
             self.writer = None
 
-    def update_log(
+    def update(
         self,
         clock_tick: Dict[str, int],
         stats_tick: Dict[str, float],
         model=None,
-        plot_to_tboard=None,
+        plot_fig=None,
+        extra_obj=None,
         save=False,
     ):
         """Update with the newest tick of performance stats, net weights"""
@@ -239,7 +249,7 @@ class MLELogger(object):
 
         # Update the tensorboard log with the newest event
         if self.writer is not None:
-            self.update_tboard(clock_tick, stats_tick, model, plot_to_tboard)
+            self.update_tboard(clock_tick, stats_tick, model, plot_fig)
 
         # Print the most current results
         if self.verbose and self.print_every_k_updates is not None:
@@ -255,17 +265,23 @@ class MLELogger(object):
             # Save the most recent model checkpoint
             if model is not None:
                 self.save_model(model)
-            self.save_log()
+            # Save fig from matplotlib
+            if plot_fig is not None:
+                self.save_plot(plot_fig)
+            # Save .pkl object
+            if extra_obj is not None:
+                self.save_extra(extra_obj)
+            self.save()
 
     def update_tboard(
         self, clock_tick: dict, stats_tick: dict, model=None, plot_to_tboard=None
     ):
         """Update the tensorboard with the newest events"""
         # Set the x-axis time variable to first key provided in time key dict
-        time_var_id = clock_tick[self.time_to_track.keys()[0]]
+        time_var_id = clock_tick[self.time_to_track[0]]
 
         # Add performance & step counters
-        for k in self.what_to_track.keys():
+        for k in self.what_to_track:
             self.writer.add_scalar(
                 "performance/" + k, np.mean(stats_tick[k]), time_var_id
             )
@@ -277,11 +293,15 @@ class MLELogger(object):
                     self.writer.add_histogram(
                         "weights/" + name, param.clone().cpu().data.numpy(), time_var_id
                     )
-                    self.writer.add_histogram(
-                        "gradients/" + name,
-                        param.grad.clone().cpu().data.numpy(),
-                        time_var_id,
-                    )
+                    # Try getting gradients from torch model
+                    try:
+                        self.writer.add_histogram(
+                            "gradients/" + name,
+                            param.grad.clone().cpu().data.numpy(),
+                            time_var_id,
+                        )
+                    except:
+                        continue
             elif self.model_type == "jax":
                 # Try to add parameters from nested dict first - then simple
                 # TODO: Add gradient tracking for JAX models
@@ -305,7 +325,7 @@ class MLELogger(object):
         # Flush the log event
         self.writer.flush()
 
-    def save_log(self):
+    def save(self):
         """Create compressed .hdf5 file containing group <random-seed-id>"""
         h5f = h5py.File(self.log_save_fname, "a")
 
@@ -482,7 +502,7 @@ class MLELogger(object):
             )
 
     def save_model(self, model):
-        """Save current state of the model as a checkpoint - torch!"""
+        """Save current state of the model as a checkpoint."""
         # If first model ckpt is saved - generate necessary directories
         self.model_save_counter += 1
         if self.model_save_counter == 1:
@@ -636,7 +656,7 @@ class MLELogger(object):
         # Update the saved weights in a single file!
         torch.save(model.state_dict(), path_to_store)
 
-    def save_plot(self, fig, fname_ext=".png"):
+    def save_plot(self, fig, fig_fname: Union[str, None] = None):
         """Store a figure in a experiment_id/figures directory."""
         # Create new directory to store figures - if it doesn't exist yet
         figures_dir = os.path.join(self.experiment_dir, "figures/")
@@ -647,11 +667,18 @@ class MLELogger(object):
                 pass
 
         # Tick up counter, save figure, store new path to figure
-        self.fig_save_counter += 1
-        figure_fname = os.path.join(
-            figures_dir,
-            "fig_" + str(self.fig_save_counter) + "_" + str(self.seed_id) + fname_ext,
-        )
+        if fig_fname is None:
+            self.fig_save_counter += 1
+            figure_fname = os.path.join(
+                figures_dir,
+                "fig_" + str(self.fig_save_counter) + "_" + str(self.seed_id) + ".png",
+            )
+        else:
+            figure_fname = os.path.join(
+                figures_dir,
+                fig_fname,
+            )
+
         fig.savefig(figure_fname, dpi=300)
         self.fig_storage_paths.append(figure_fname)
 
@@ -670,11 +697,9 @@ class MLELogger(object):
         h5f.flush()
         h5f.close()
 
-    def save_extra(self, obj, fname):
+    def save_extra(self, obj, obj_fname: Union[str, None] = None):
         """Helper fct. to save object (dict/etc.) as .pkl in exp. subdir."""
-        filename, file_extension = os.path.splitext(fname)
         extra_dir = os.path.join(self.experiment_dir, "extra/")
-        path_to_store = os.path.join(extra_dir, fname)
         # Create a new empty directory for the experiment
         if not os.path.exists(extra_dir):
             try:
@@ -682,8 +707,41 @@ class MLELogger(object):
             except Exception:
                 pass
 
-        # Differentiate between .npy and .pkl storage
-        if file_extension == ".npy":
-            np.save(path_to_store, obj)
+
+        # Tick up counter, save figure, store new path to figure
+        if obj_fname is None:
+            self.extra_save_counter += 1
+            obj_fname = os.path.join(
+                extra_dir,
+                "extra_" + str(self.extra_save_counter) + "_" + str(self.seed_id) + ".pkl",
+            )
         else:
-            save_pkl_object(obj, path_to_store)
+            obj_fname = os.path.join(
+                extra_dir,
+                obj_fname,
+            )
+
+        save_pkl_object(obj, obj_fname)
+        self.extra_storage_paths.append(obj_fname)
+
+        # Store figure paths if any where created
+        h5f = h5py.File(self.log_save_fname, "a")
+        if self.extra_save_counter > 1:
+            if h5f.get(self.seed_id + "/meta/extra_storage_paths"):
+                del h5f[self.seed_id + "/meta/extra_storage_paths"]
+        h5f.create_dataset(
+            name=self.seed_id + "/meta/extra_storage_paths",
+            data=[t.encode("ascii", "ignore") for t in self.extra_storage_paths],
+            compression="gzip",
+            compression_opts=4,
+            dtype="S200",
+        )
+        h5f.flush()
+        h5f.close()
+
+
+def save_pkl_object(obj, filename: str):
+    """Helper to store pickle objects."""
+    with open(filename, "wb") as output:
+        # Overwrites any existing file.
+        pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)

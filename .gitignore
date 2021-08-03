@@ -15,7 +15,7 @@ tboards/
 __pycache__/
 *.py[cod]
 *$py.class
-
+experiment_dir
 # C extensions
 *.so
 
