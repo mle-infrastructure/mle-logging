@@ -3,6 +3,9 @@
 [![Docs Latest](https://img.shields.io/badge/docs-dev-blue.svg)](https://roberttlange.github.io/mle-toolbox/logging/mle_logging/)
 [![PyPI version](https://badge.fury.io/py/mle-logging.svg)](https://badge.fury.io/py/mle-logging)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb)
+
+## The API :video_game:
 
 ```python
 from mle_logging import MLELogger
@@ -21,7 +24,11 @@ stats_tic = {'train_loss': 0.1234,
 # Update the log with collected data & save it to .hdf5
 log.update(time_tic, stats_tic)
 log.save()
+```
 
+You can also log model checkpoints, matplotlib figures and other `.pkl` compatible objects.
+
+```python
 # Save a model (torch, sklearn, jax, numpy)
 log.save_model(model)
 
@@ -32,14 +39,15 @@ log.save_plot(fig)
 # You can also save (somewhat) arbitrary objects .pkl
 some_dict = {"hi" : "there"}
 log.save_extra(some_dict)
-
-# Or do everything in one go
-log.update(time_tic, stats_tic,
-           model, fig, extra,
-           save=True)
 ```
 
-## Generated File Structure
+
+Or do everything in a single line...
+```python
+log.update(time_tic, stats_tic, model, fig, extra, save=True)
+```
+
+### Generated File Structure :books:
 
 The `MLELogger` will create a nested directory, which looks as follows:
 
@@ -53,8 +61,9 @@ experiment_dir
     ├── every_k: Stores every k-th checkpoint provided in update
     ├── top_k: Stores portfolio of top-k checkpoints based on performance
 ├── tboards: Stores tensorboards for model checkpointing
-├── <config_name>.json: Copy of configuration file
+├── <config_name>.json: Copy of configuration file (if provided)
 ```
+
 
 ## Installation :memo:
 
@@ -72,28 +81,53 @@ cd mle-logging
 pip install -e .
 ```
 
+
+## Advanced Options
+
+#### Merging Multiple Logs :couple:
+
+**Merging Multiple Random Seeds** :seedling: + :seedling:
+
+```python
+```
+
+**Merging Multiple Configurations** :bookmark: + :bookmark:
+
+```python
+```
+
+#### Storing Checkpoint Portfolios :couple:
+
+**Logging every k-th checkpoint update**
+
+```python
+```
+
+**Logging top-k checkpoints based on metric**
+
+```python
+```
+
 ## Development
 
 If you find a bug or want a new feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:
 
 
-## TODO until release
+## Milestones for Next Release
 - [ ] Add reloading utilities
 - [ ] Add merging utilities
 - [ ] Add simple aggregation of multiple logs
 - [ ] No mean/stats for time variables when aggregating multiple seeds
 
-- [ ] Add tests
 - [ ] Add transformations of time series
     - [ ] Running means
     - [ ] Smoothing of different degrees
-- [ ] Refactor logger into smaller pieces
+- [ ] Refactor logger into smaller pieces & test
     - [ ] Save model
     - [ ] Save figure
     - [ ] Save extra
     - [ ] Save log
-- [ ] Write simple tests
-- [ ] Add rich print table messages
+- [ ] Add rich print table messages for updates
 - [ ] Add tensorflow model saving
-- [ ] Clean Up Tensorboard logging
+- [ ] Clean Up Tensorboard logging (for JAX/TF models)
 - [ ] Add Weights and Biases Support

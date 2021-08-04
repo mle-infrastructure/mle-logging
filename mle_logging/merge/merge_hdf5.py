@@ -9,7 +9,7 @@ def merge_hdf5_files(
     log_paths: List[str],
     file_ids: Union[None, List[str]] = None,
     delete_files: bool = False,
-):
+) -> None:
     """Merges a set of hdf5 files into a new hdf5 file with more groups."""
     file_to = h5py.File(new_filename, "w")
     for i, log_p in enumerate(log_paths):

@@ -6,7 +6,7 @@ import time
 import datetime
 import h5py
 from typing import Union, List, Dict
-import pickle
+from .utils import save_pkl_object
 
 
 class MLELogger(object):
@@ -123,7 +123,7 @@ class MLELogger(object):
     def setup_experiment_dir(
         self,
         base_exp_dir: str,
-        config_fname: str,
+        config_fname: Union[str, None],
         seed_id: str,
         use_tboard: bool = False,
         overwrite_experiment_dir: bool = False,
@@ -142,7 +142,7 @@ class MLELogger(object):
         os.makedirs(self.experiment_dir, exist_ok=True)
         os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
 
-        exp_time_base = self.experiment_dir + timestr + "_" + self.base_str
+        exp_time_base = self.experiment_dir + timestr + self.base_str
         self.config_copy = exp_time_base + ".json"
         if not os.path.exists(self.config_copy) and config_fname is not None:
             shutil.copy(config_fname, self.config_copy)
@@ -738,10 +738,3 @@ class MLELogger(object):
         )
         h5f.flush()
         h5f.close()
-
-
-def save_pkl_object(obj, filename: str):
-    """Helper to store pickle objects."""
-    with open(filename, "wb") as output:
-        # Overwrites any existing file.
-        pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
