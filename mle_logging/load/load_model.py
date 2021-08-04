@@ -29,6 +29,5 @@ def load_model(ckpt_path: str, model_type: str, model=None):
         return model
     else:
         raise ValueError(
-            "Please provide a valid model type ('torch', 'jax',"
-            " 'sklearn', 'numpy')."
+            "Please provide a valid model type ('torch', 'jax'," " 'sklearn', 'numpy')."
         )

@@ -133,7 +133,9 @@ class MLELogger(object):
         timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
         if config_fname is not None:
             self.base_str = "_" + os.path.split(config_fname)[1].split(".")[0]
-            self.experiment_dir = os.path.join(base_exp_dir, timestr + self.base_str + "/")
+            self.experiment_dir = os.path.join(
+                base_exp_dir, timestr + self.base_str + "/"
+            )
         else:
             self.base_str = ""
             self.experiment_dir = base_exp_dir
@@ -149,14 +151,23 @@ class MLELogger(object):
 
         # Set where to log to (Stats - .hdf5, model - .ckpth)
         self.log_save_fname = (
-            self.experiment_dir + "logs/" + timestr
-            + self.base_str + "_" + seed_id + ".hdf5"
+            self.experiment_dir
+            + "logs/"
+            + timestr
+            + self.base_str
+            + "_"
+            + seed_id
+            + ".hdf5"
         )
 
         # Create separate filenames for checkpoints & final trained model
         self.final_model_save_fname = (
-            self.experiment_dir + "models/final/" + timestr
-            + self.base_str + "_" + seed_id
+            self.experiment_dir
+            + "models/final/"
+            + timestr
+            + self.base_str
+            + "_"
+            + seed_id
         )
         if self.save_every_k_ckpt is not None:
             self.every_k_ckpt_list: List[str] = []
@@ -208,7 +219,9 @@ class MLELogger(object):
                     "MLELogger logs to tensorboard."
                 )
             self.writer = SummaryWriter(
-                self.experiment_dir + "tboards/" + timestr
+                self.experiment_dir
+                + "tboards/"
+                + timestr
                 + self.base_str
                 + "_"
                 + seed_id
@@ -707,13 +720,16 @@ class MLELogger(object):
             except Exception:
                 pass
 
-
         # Tick up counter, save figure, store new path to figure
         if obj_fname is None:
             self.extra_save_counter += 1
             obj_fname = os.path.join(
                 extra_dir,
-                "extra_" + str(self.extra_save_counter) + "_" + str(self.seed_id) + ".pkl",
+                "extra_"
+                + str(self.extra_save_counter)
+                + "_"
+                + str(self.seed_id)
+                + ".pkl",
             )
         else:
             obj_fname = os.path.join(

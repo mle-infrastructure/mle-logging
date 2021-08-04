@@ -7,17 +7,17 @@ import matplotlib.pyplot as plt
 from mle_logging import MLELogger
 
 
-log_config = {"time_to_track": ['num_updates', 'num_epochs'],
-              "what_to_track": ['train_loss', 'test_loss'],
-              "experiment_dir": "experiment_dir/",
-              "config_fname": None,
-              "use_tboard": True,
-              "model_type": 'torch'}
+log_config = {
+    "time_to_track": ["num_updates", "num_epochs"],
+    "what_to_track": ["train_loss", "test_loss"],
+    "experiment_dir": "experiment_dir/",
+    "config_fname": None,
+    "use_tboard": True,
+    "model_type": "torch",
+}
 
-time_tic = {'num_updates': 10,
-            'num_epochs': 1}
-stats_tic = {'train_loss': 0.1234,
-             'test_loss': 0.1235}
+time_tic = {"num_updates": 10, "num_epochs": 1}
+stats_tic = {"train_loss": 0.1234, "test_loss": 0.1235}
 
 
 class DummyModel(nn.Module):
@@ -33,6 +33,7 @@ class DummyModel(nn.Module):
         x = self.fc3(x)
         return x
 
+
 model = DummyModel()
 
 fig, ax = plt.subplots()
@@ -41,8 +42,9 @@ ax.plot(np.random.normal(0, 1, 20))
 
 def test_update_log():
     # Remove experiment dir at start of test
-    if (os.path.exists(log_config["experiment_dir"]) and
-        os.path.isdir(log_config["experiment_dir"])):
+    if os.path.exists(log_config["experiment_dir"]) and os.path.isdir(
+        log_config["experiment_dir"]
+    ):
         shutil.rmtree(log_config["experiment_dir"])
 
     # Instantiate logging to experiment_dir
@@ -55,8 +57,9 @@ def test_update_log():
     assert os.path.exists(os.path.join(log_config["experiment_dir"], "logs"))
     assert os.path.exists(os.path.join(log_config["experiment_dir"], "tboards"))
     timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
-    file_to_check = os.path.join(log_config["experiment_dir"], "logs",
-                                 timestr + "_no_seed_provided.hdf5")
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "logs", timestr + "_no_seed_provided.hdf5"
+    )
     assert os.path.exists(file_to_check)
 
     # Finally -- clean up
@@ -65,8 +68,9 @@ def test_update_log():
 
 def test_save_torch():
     # Remove experiment dir at start of test
-    if (os.path.exists(log_config["experiment_dir"]) and
-        os.path.isdir(log_config["experiment_dir"])):
+    if os.path.exists(log_config["experiment_dir"]) and os.path.isdir(
+        log_config["experiment_dir"]
+    ):
         shutil.rmtree(log_config["experiment_dir"])
 
     # Instantiate logging to experiment_dir
@@ -77,8 +81,9 @@ def test_save_torch():
 
     # Assert the existence of the files
     timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
-    file_to_check = os.path.join(log_config["experiment_dir"], "models/final",
-                                 timestr + "_no_seed_provided.pt")
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "models/final", timestr + "_no_seed_provided.pt"
+    )
     assert os.path.exists(file_to_check)
 
     # Finally -- clean up
@@ -87,8 +92,9 @@ def test_save_torch():
 
 def test_save_plot():
     # Remove experiment dir at start of test
-    if (os.path.exists(log_config["experiment_dir"]) and
-        os.path.isdir(log_config["experiment_dir"])):
+    if os.path.exists(log_config["experiment_dir"]) and os.path.isdir(
+        log_config["experiment_dir"]
+    ):
         shutil.rmtree(log_config["experiment_dir"])
 
     # Instantiate logging to experiment_dir
@@ -98,8 +104,9 @@ def test_save_plot():
     log.save_plot(fig)
 
     # Assert the existence of the files
-    file_to_check = os.path.join(log_config["experiment_dir"], "figures",
-                                 "fig_1_no_seed_provided.png")
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "figures", "fig_1_no_seed_provided.png"
+    )
     assert os.path.exists(file_to_check)
 
     # Finally -- clean up
@@ -108,20 +115,22 @@ def test_save_plot():
 
 def test_save_extra():
     # Remove experiment dir at start of test
-    if (os.path.exists(log_config["experiment_dir"]) and
-        os.path.isdir(log_config["experiment_dir"])):
+    if os.path.exists(log_config["experiment_dir"]) and os.path.isdir(
+        log_config["experiment_dir"]
+    ):
         shutil.rmtree(log_config["experiment_dir"])
 
     # Instantiate logging to experiment_dir
     log = MLELogger(**log_config)
 
     # Save a dict as a .pkl object
-    some_dict = {"hi" : "there"}
+    some_dict = {"hi": "there"}
     log.save_extra(some_dict)
 
     # Assert the existence of the files
-    file_to_check = os.path.join(log_config["experiment_dir"], "extra",
-                                 "extra_1_no_seed_provided.pkl")
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "extra", "extra_1_no_seed_provided.pkl"
+    )
     assert os.path.exists(file_to_check)
 
     # Finally -- clean up
@@ -130,39 +139,42 @@ def test_save_extra():
 
 def test_all_in_one():
     # Remove experiment dir at start of test
-    if (os.path.exists(log_config["experiment_dir"]) and
-        os.path.isdir(log_config["experiment_dir"])):
+    if os.path.exists(log_config["experiment_dir"]) and os.path.isdir(
+        log_config["experiment_dir"]
+    ):
         shutil.rmtree(log_config["experiment_dir"])
 
     # Instantiate logging to experiment_dir
     log = MLELogger(**log_config)
 
     # Save a dict as a .pkl object
-    some_dict = {"hi" : "there"}
+    some_dict = {"hi": "there"}
     log.save_extra(some_dict)
 
-    log.update(time_tic, stats_tic,
-               model, fig, some_dict,
-               save=True)
+    log.update(time_tic, stats_tic, model, fig, some_dict, save=True)
 
     # Assert the existence of the files
     assert os.path.exists(os.path.join(log_config["experiment_dir"], "logs"))
     assert os.path.exists(os.path.join(log_config["experiment_dir"], "tboards"))
     timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
-    file_to_check = os.path.join(log_config["experiment_dir"], "logs",
-                                 timestr + "_no_seed_provided.hdf5")
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "logs", timestr + "_no_seed_provided.hdf5"
+    )
     assert os.path.exists(file_to_check)
 
-    file_to_check = os.path.join(log_config["experiment_dir"], "models/final",
-                                 timestr + "_no_seed_provided.pt")
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "models/final", timestr + "_no_seed_provided.pt"
+    )
     assert os.path.exists(file_to_check)
 
-    file_to_check = os.path.join(log_config["experiment_dir"], "figures",
-                                 "fig_1_no_seed_provided.png")
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "figures", "fig_1_no_seed_provided.png"
+    )
     assert os.path.exists(file_to_check)
 
-    file_to_check = os.path.join(log_config["experiment_dir"], "extra",
-                                 "extra_1_no_seed_provided.pkl")
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "extra", "extra_1_no_seed_provided.pkl"
+    )
     assert os.path.exists(file_to_check)
 
     # Finally -- clean up

@@ -51,7 +51,6 @@ class MetaLog(object):
                 "the plotting utilities."
             )
 
-
         if iter_to_plot is None:
             iter_to_plot = self.time_vars[0]
         assert target_to_plot in self.stats_vars

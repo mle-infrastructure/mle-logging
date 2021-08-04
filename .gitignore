@@ -19,6 +19,7 @@ experiment_dir
 # C extensions
 *.so
 examples/multi_seed_dir
+examples/multi_config_dir
 
 # Distribution / packaging
 .Python

@@ -2,7 +2,6 @@ import os
 import h5py
 from dotmap import DotMap
 from typing import List, Tuple
-from ..merge import aggregate_over_seeds
 from ..meta_log import MetaLog
 
 
@@ -39,11 +38,13 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
 
     # Return as dot-callable dictionary
     if aggregate_seeds:
+        from ..merge.aggregate import aggregate_over_seeds
+
         result_dict = aggregate_over_seeds(result_dict)
     return MetaLog(DotMap(result_dict, _dynamic=False))
 
 
-def load_log(experiment_dir: str, mean_seeds: bool = False) -> MetaLog:
+def load_log(experiment_dir: str, aggregate_seeds: bool = False) -> MetaLog:
     """Load a single .hdf5 log from <experiment_dir>/logs."""
     if experiment_dir.endswith(".hdf5"):
         log_path = experiment_dir
@@ -57,5 +58,5 @@ def load_log(experiment_dir: str, mean_seeds: bool = False) -> MetaLog:
             print(f"Multiple .hdf5 files available: {log_paths}")
             print(f"Continue using: {log_paths[0]}")
         log_path = log_paths[0]
-    run_log = load_meta_log(log_path, mean_seeds)
+    run_log = load_meta_log(log_path, aggregate_seeds)
     return run_log

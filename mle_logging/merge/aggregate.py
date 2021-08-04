@@ -100,9 +100,7 @@ def aggregate_single_eval(
                     aggregate_dict[o_name]["p75"] = p75
                     aggregate_dict[o_name]["p90"] = p90
                 else:
-                    aggregate_dict[o_name] = new_results_dict[eval_name][ds][
-                        o_name
-                    ]
+                    aggregate_dict[o_name] = new_results_dict[eval_name][ds][o_name]
         # Append over all meta data (strings, seeds nothing to mean)
         elif ds == "meta":
             aggregate_dict = {}
