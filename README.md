@@ -5,6 +5,8 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb)
 
+Simple logging of statistics, model checkpoints, plots and other objects for your Machine Learning Experiments (MLE). Furthermore, the `MLELogger` comes with smooth multi-seed result aggregation and combination of multi-configuration runs.
+
 ## The API :video_game:
 
 ```python
@@ -30,6 +32,8 @@ You can also log model checkpoints, matplotlib figures and other `.pkl` compatib
 
 ```python
 # Save a model (torch, sklearn, jax, numpy)
+import torchvision.models as models
+model = models.resnet18()
 log.save_model(model)
 
 # Save a matplotlib figure as .png
@@ -47,7 +51,21 @@ Or do everything in a single line...
 log.update(time_tic, stats_tic, model, fig, extra, save=True)
 ```
 
-### Generated File Structure :books:
+### File Structure & Re-Loading :books:
+
+For visualization and post-processing load the results via
+```python
+from mle_toolbox import load_log
+log_out = load_log("experiment_dir/")
+
+# The results can be accessed via meta, stats and time keys
+# >>> log_out.meta.keys()
+# odict_keys(['experiment_dir', 'extra_storage_paths', 'fig_storage_paths', 'log_paths', 'model_ckpt', 'model_type'])
+# >>> log_out.stats.keys()
+# odict_keys(['test_loss', 'train_loss'])
+# >>> log_out.time.keys()
+# odict_keys(['num_epochs', 'num_updates', 'time_elapsed'])
+```
 
 The `MLELogger` will create a nested directory, which looks as follows:
 
@@ -82,7 +100,7 @@ pip install -e .
 ```
 
 
-## Advanced Options
+## Advanced Options :mage:
 
 #### Merging Multiple Logs :couple:
 
@@ -96,14 +114,14 @@ pip install -e .
 ```python
 ```
 
-#### Storing Checkpoint Portfolios :couple:
+#### Storing Checkpoint Portfolios :file_cabinet:
 
-**Logging every k-th checkpoint update**
+**Logging every k-th checkpoint update** :exclamation: :arrow_right: ... :arrow_right: :exclamation:
 
 ```python
 ```
 
-**Logging top-k checkpoints based on metric**
+**Logging top-k checkpoints based on metric** :1st_place_medal:, :2nd_place_medal:, :3rd_place_medal:
 
 ```python
 ```
@@ -114,7 +132,7 @@ If you find a bug or want a new feature, feel free to contact me [@RobertTLange]
 
 
 ## Milestones for Next Release
-- [ ] Add reloading utilities
+- [ ] Add reloading of previous log (seamless continuation)
 - [ ] Add merging utilities
 - [ ] Add simple aggregation of multiple logs
 - [ ] No mean/stats for time variables when aggregating multiple seeds
@@ -128,6 +146,7 @@ If you find a bug or want a new feature, feel free to contact me [@RobertTLange]
     - [ ] Save extra
     - [ ] Save log
 - [ ] Add rich print table messages for updates
+- [ ] Make logger more verbose (if desired)
 - [ ] Add tensorflow model saving
 - [ ] Clean Up Tensorboard logging (for JAX/TF models)
 - [ ] Add Weights and Biases Support
