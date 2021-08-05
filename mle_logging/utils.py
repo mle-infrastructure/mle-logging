@@ -1,4 +1,5 @@
 import pickle
+import pickle5
 from typing import Any
 
 
@@ -12,5 +13,5 @@ def save_pkl_object(obj, filename: str) -> None:
 def load_pkl_object(filename: str) -> Any:
     """Helper to reload pickle objects."""
     with open(filename, "rb") as input:
-        obj = pickle.load(input)
+        obj = pickle5.load(input)
     return obj

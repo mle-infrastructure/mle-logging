@@ -55,7 +55,7 @@ log.update(time_tic, stats_tic, model, fig, extra, save=True)
 
 For visualization and post-processing load the results via
 ```python
-from mle_toolbox import load_log
+from mle_logging import load_log
 log_out = load_log("experiment_dir/")
 
 # The results can be accessed via meta, stats and time keys
@@ -107,11 +107,24 @@ pip install -e .
 **Merging Multiple Random Seeds** :seedling: + :seedling:
 
 ```python
+from mle_logging import merge_seed_logs
+merge_seed_logs("multi_seed.hdf", "experiment_dir/")
+log_out = load_log("experiment_dir/")
+# >>> log.eval_ids
+# ['seed_1', 'seed_2']
 ```
 
 **Merging Multiple Configurations** :bookmark: + :bookmark:
 
 ```python
+from mle_logging import merge_config_logs, load_meta_log
+merge_config_logs(experiment_dir = "experiment_dir/",
+                  all_run_ids = ["config_1", "config_2"])
+meta_log = load_meta_log("multi_config_dir/meta_log.hdf5")
+# >>> log.eval_ids
+# ['config_2', 'config_1']
+# >>> meta_log.config_1.stats.test_loss.keys()
+# odict_keys(['mean', 'std', 'p50', 'p10', 'p25', 'p75', 'p90']))
 ```
 
 #### Storing Checkpoint Portfolios :file_cabinet:
@@ -119,11 +132,28 @@ pip install -e .
 **Logging every k-th checkpoint update** :exclamation: :arrow_right: ... :arrow_right: :exclamation:
 
 ```python
+# Save every second checkpoint provided in log.update (stored in models/every_k)
+log = MLELogger(time_to_track = ['num_updates', 'num_epochs'],
+                what_to_track = ['train_loss', 'test_loss'],
+                experiment_dir = 'every_k_dir/',
+                model_type = 'torch',
+                ckpt_time_to_track = 'num_updates',
+                save_every_k_ckpt = 2)
 ```
 
 **Logging top-k checkpoints based on metric** :1st_place_medal:, :2nd_place_medal:, :3rd_place_medal:
 
 ```python
+# Save top-3 checkpoints provided in log.update (stored in models/top_k)
+# Based on minimizing the test_loss metric
+log = MLELogger(time_to_track = ['num_updates', 'num_epochs'],
+                what_to_track = ['train_loss', 'test_loss'],
+                experiment_dir = "top_k_dir/",
+                model_type = 'torch',
+                ckpt_time_to_track = 'num_updates',
+                save_top_k_ckpt = 3,
+                top_k_metric_name = "test_loss",
+                top_k_minimize_metric = True)
 ```
 
 ## Development
@@ -134,7 +164,7 @@ If you find a bug or want a new feature, feel free to contact me [@RobertTLange]
 ## Milestones for Next Release
 - [ ] Add reloading of previous log (seamless continuation)
 - [ ] No mean/stats for time variables when aggregating multiple seeds
-
+- [ ] Fix so that multi-config/seed indexing works `meta_log.config_1.seed_1.stats`
 - [ ] Add transformations of time series
     - [ ] Running means
     - [ ] Smoothing of different degrees

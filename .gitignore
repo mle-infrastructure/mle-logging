@@ -20,6 +20,8 @@ experiment_dir
 *.so
 examples/multi_seed_dir
 examples/multi_config_dir
+examples/every_k_dir
+examples/top_k_dir
 
 # Distribution / packaging
 .Python

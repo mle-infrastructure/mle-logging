@@ -43,7 +43,7 @@ class MLELogger(object):
         what_to_track: List[str],
         time_to_print: Union[List[str], None] = None,
         what_to_print: Union[List[str], None] = None,
-        config_fname: str = "base_config.json",
+        config_fname: Union[str, None] = None,
         experiment_dir: str = "/",
         seed_id: str = "no_seed_provided",
         overwrite_experiment_dir: bool = False,
@@ -145,9 +145,12 @@ class MLELogger(object):
         os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
 
         exp_time_base = self.experiment_dir + timestr + self.base_str
-        self.config_copy = exp_time_base + ".json"
-        if not os.path.exists(self.config_copy) and config_fname is not None:
-            shutil.copy(config_fname, self.config_copy)
+        config_copy = exp_time_base + ".json"
+        if not os.path.exists(config_copy) and config_fname is not None:
+            shutil.copy(config_fname, config_copy)
+            self.config_copy = config_copy
+        else:
+            self.config_copy = "config-json-not-provided"
 
         # Set where to log to (Stats - .hdf5, model - .ckpth)
         self.log_save_fname = (
@@ -558,6 +561,7 @@ class MLELogger(object):
                     )
                     np.save(ckpt_path, model)
                 # Update model save count & time point of storage
+                # Use latest update performance for last checkpoint
                 time = self.clock_to_track[self.ckpt_time_to_track].to_numpy()[-1]
                 self.every_k_storage_time.append(time)
                 self.every_k_ckpt_list.append(ckpt_path)
@@ -565,6 +569,7 @@ class MLELogger(object):
         # CASE 3: STORE TOP-K MODEL STATES BY SOME SCORE
         if self.save_top_k_ckpt is not None:
             updated_top_k = False
+            # Use latest update performance for last checkpoint
             score = self.stats_to_track[self.top_k_metric_name].to_numpy()[-1]
             time = self.clock_to_track[self.ckpt_time_to_track].to_numpy()[-1]
             # Fill up empty top k slots

@@ -1,7 +1,6 @@
 import os
 import h5py
 from dotmap import DotMap
-from typing import List, Tuple
 from ..meta_log import MetaLog
 
 
@@ -38,8 +37,8 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
 
     # Return as dot-callable dictionary
     if aggregate_seeds:
+        # Important aggregation helper & compute mean/median/10p/50p/etc.
         from ..merge.aggregate import aggregate_over_seeds
-
         result_dict = aggregate_over_seeds(result_dict)
     return MetaLog(DotMap(result_dict, _dynamic=False))
 

@@ -5,3 +5,4 @@ dotmap
 matplotlib
 torch
 tensorboard
+pickle5
