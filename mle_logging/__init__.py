@@ -12,5 +12,5 @@ __all__ = [
     "load_meta_log",
     "load_model",
     "merge_config_logs",
-    "merge_seed_logs"
+    "merge_seed_logs",
 ]

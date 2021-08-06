@@ -39,6 +39,8 @@ model = DummyModel()
 fig, ax = plt.subplots()
 ax.plot(np.random.normal(0, 1, 20))
 
+some_dict = {"hi": "there"}
+
 
 def test_update_log():
     # Remove experiment dir at start of test
@@ -59,30 +61,6 @@ def test_update_log():
     timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
     file_to_check = os.path.join(
         log_config["experiment_dir"], "logs", timestr + "_no_seed_provided.hdf5"
-    )
-    assert os.path.exists(file_to_check)
-
-    # Finally -- clean up
-    shutil.rmtree(log_config["experiment_dir"])
-
-
-def test_save_torch():
-    # Remove experiment dir at start of test
-    if os.path.exists(log_config["experiment_dir"]) and os.path.isdir(
-        log_config["experiment_dir"]
-    ):
-        shutil.rmtree(log_config["experiment_dir"])
-
-    # Instantiate logging to experiment_dir
-    log = MLELogger(**log_config)
-
-    # Save a torch model
-    log.save_model(model)
-
-    # Assert the existence of the files
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
-    file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final", timestr + "_no_seed_provided.pt"
     )
     assert os.path.exists(file_to_check)
 
@@ -124,7 +102,6 @@ def test_save_extra():
     log = MLELogger(**log_config)
 
     # Save a dict as a .pkl object
-    some_dict = {"hi": "there"}
     log.save_extra(some_dict)
 
     # Assert the existence of the files
@@ -148,9 +125,6 @@ def test_all_in_one():
     log = MLELogger(**log_config)
 
     # Save a dict as a .pkl object
-    some_dict = {"hi": "there"}
-    log.save_extra(some_dict)
-
     log.update(time_tic, stats_tic, model, fig, some_dict, save=True)
 
     # Assert the existence of the files

@@ -4,10 +4,12 @@ from typing import Union
 from .merge_hdf5 import merge_hdf5_files
 
 
-def merge_seed_logs(merged_path: str,
-                    experiment_dir: str,
-                    num_logs: Union[int, None] = None,
-                    delete_files: bool = True) -> None:
+def merge_seed_logs(
+    merged_path: str,
+    experiment_dir: str,
+    num_logs: Union[int, None] = None,
+    delete_files: bool = True,
+) -> None:
     """Merge all .hdf5 files for different seeds into single log."""
     # Collect paths in log dir until the correct number is found
     # Only if num_logs is not None

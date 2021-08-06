@@ -1,6 +1,5 @@
 # A Lightweight Logger for ML Experiments :book:
 [![Pyversions](https://img.shields.io/pypi/pyversions/mle-logging.svg?style=flat-square)](https://pypi.python.org/pypi/mle-logging)
-[![Docs Latest](https://img.shields.io/badge/docs-dev-blue.svg)](https://roberttlange.github.io/mle-toolbox/logging/mle_logging/)
 [![PyPI version](https://badge.fury.io/py/mle-logging.svg)](https://badge.fury.io/py/mle-logging)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/RobertTLange/mle-logging/blob/main/examples/01_getting_started.ipynb)
@@ -102,7 +101,7 @@ pip install -e .
 
 ## Advanced Options :mage:
 
-#### Merging Multiple Logs :couple:
+### Merging Multiple Logs :couple:
 
 **Merging Multiple Random Seeds** :seedling: + :seedling:
 
@@ -127,7 +126,7 @@ meta_log = load_meta_log("multi_config_dir/meta_log.hdf5")
 # odict_keys(['mean', 'std', 'p50', 'p10', 'p25', 'p75', 'p90']))
 ```
 
-#### Storing Checkpoint Portfolios :file_cabinet:
+### Storing Checkpoint Portfolios :file_cabinet:
 
 **Logging every k-th checkpoint update** :exclamation: :arrow_right: ... :arrow_right: :exclamation:
 
@@ -158,13 +157,13 @@ log = MLELogger(time_to_track = ['num_updates', 'num_epochs'],
 
 ## Development
 
-If you find a bug or want a new feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:
+If you find a bug or are missing your favourite feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:
 
 
 ## Milestones for Next Release
-- [ ] Add reloading of previous log (seamless continuation)
+- [ ] Add reloading of previous log for seamless continuation of a run
 - [ ] No mean/stats for time variables when aggregating multiple seeds
-- [ ] Fix so that multi-config/seed indexing works `meta_log.config_1.seed_1.stats`
+- [ ] Fix so that multi-config/seed indexing works via `meta_log.config_1.seed_1.stats`
 - [ ] Add transformations of time series
     - [ ] Running means
     - [ ] Smoothing of different degrees
@@ -175,6 +174,5 @@ If you find a bug or want a new feature, feel free to contact me [@RobertTLange]
     - [ ] Save log
 - [ ] Add rich print table messages for updates
 - [ ] Make logger more verbose (if desired)
-- [ ] Add tensorflow model saving
 - [ ] Clean Up Tensorboard logging (for JAX/TF models)
 - [ ] Add Weights and Biases Support

@@ -21,10 +21,12 @@ def load_model(ckpt_path: str, model_type: str, model=None):
             return model
         else:
             return checkpoint
+    elif model_type == "tensorflow":
+        model.load_weights(ckpt_path)
     elif model_type in ["jax", "sklearn"]:
         model = load_pkl_object(ckpt_path)
         return model
-    elif model_type in ["numpy"]:
+    elif model_type == "numpy":
         model = np.load(ckpt_path)
         return model
     else:

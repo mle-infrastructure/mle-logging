@@ -55,5 +55,7 @@ setup(
     zip_safe=False,
     platforms="any",
     python_requires=">=3.6",
-    install_requires=parse_requirements(os.path.join(CURRENT_DIR, "requirements.txt")),
+    install_requires=parse_requirements(os.path.join(CURRENT_DIR,
+                                                     "requirements.txt")),
+    tests_require=["tensorflow", "dm-haiku", "sklearn"]
 )
