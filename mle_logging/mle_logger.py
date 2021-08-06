@@ -73,7 +73,9 @@ class MLELogger(object):
         self.print_every_k_updates = print_every_k_updates
 
         # MODEL LOGGING SETUP: Type of model/every k-th ckpt/top k ckpt
-        assert model_type in ["torch", "tensorflow", "jax", "sklearn", "numpy"]
+        assert model_type in ["torch", "tensorflow", "jax",
+                              "sklearn", "numpy",
+                              "no-model-type-provided"]
         self.model_type = model_type
         self.ckpt_time_to_track = ckpt_time_to_track
         self.save_every_k_ckpt = save_every_k_ckpt

@@ -27,7 +27,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest pytest-timeout
         pip install flake8 black
-        python setup.py test
+        pip install tensorflow, dm-haiku, sklearn
+        pip install -e .
     - name: Format with black style
       run: |
         black --verbose ./mle_logging
