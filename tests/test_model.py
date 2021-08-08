@@ -101,6 +101,18 @@ def test_save_load_tf():
     file_to_check = os.path.join(
         log_config["experiment_dir"], "models/final",
         timestr + "_no_seed_provided.pt"
+        + ".data-00000-of-00001"
+    )
+    assert os.path.exists(file_to_check)
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "models/final",
+        timestr + "_no_seed_provided.pt"
+        + ".index"
+    )
+    assert os.path.exists(file_to_check)
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "models/final",
+        "checkpoint"
     )
     assert os.path.exists(file_to_check)
 
