@@ -56,7 +56,7 @@ class MetaLog(object):
         assert target_to_plot in self.stats_vars
         assert iter_to_plot in self.time_vars
         visualize_1D_lcurves(
-            self.meta_log,
+            self,
             iter_to_plot,
             target_to_plot,
             smooth_window=1,

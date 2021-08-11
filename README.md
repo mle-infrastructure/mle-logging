@@ -2,9 +2,11 @@
 [![Pyversions](https://img.shields.io/pypi/pyversions/mle-logging.svg?style=flat-square)](https://pypi.python.org/pypi/mle-logging)
 [![PyPI version](https://badge.fury.io/py/mle-logging.svg)](https://badge.fury.io/py/mle-logging)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/RobertTLange/mle-logging/blob/main/examples/01_getting_started.ipynb)
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb)
 
 Simple logging of statistics, model checkpoints, plots and other objects for your Machine Learning Experiments (MLE). Furthermore, the `MLELogger` comes with smooth multi-seed result aggregation and combination of multi-configuration runs.
+
+![](/docs/mle_logger_structure.png)
 
 ## The API :video_game:
 
@@ -12,10 +14,10 @@ Simple logging of statistics, model checkpoints, plots and other objects for you
 from mle_logging import MLELogger
 
 # Instantiate logging to experiment_dir
-log = MLELogger(time_to_track = ['num_updates', 'num_epochs'],
-                what_to_track = ['train_loss', 'test_loss'],
-                experiment_dir = "experiment_dir/",
-                model_type = 'torch')
+log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
+                what_to_track=['train_loss', 'test_loss'],
+                experiment_dir="experiment_dir/",
+                model_type='torch')
 
 time_tic = {'num_updates': 10,
             'num_epochs': 1}
@@ -117,8 +119,8 @@ log_out = load_log("experiment_dir/")
 
 ```python
 from mle_logging import merge_config_logs, load_meta_log
-merge_config_logs(experiment_dir = "experiment_dir/",
-                  all_run_ids = ["config_1", "config_2"])
+merge_config_logs(experiment_dir="experiment_dir/",
+                  all_run_ids=["config_1", "config_2"])
 meta_log = load_meta_log("multi_config_dir/meta_log.hdf5")
 # >>> log.eval_ids
 # ['config_2', 'config_1']
@@ -132,12 +134,12 @@ meta_log = load_meta_log("multi_config_dir/meta_log.hdf5")
 
 ```python
 # Save every second checkpoint provided in log.update (stored in models/every_k)
-log = MLELogger(time_to_track = ['num_updates', 'num_epochs'],
-                what_to_track = ['train_loss', 'test_loss'],
-                experiment_dir = 'every_k_dir/',
-                model_type = 'torch',
-                ckpt_time_to_track = 'num_updates',
-                save_every_k_ckpt = 2)
+log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
+                what_to_track=['train_loss', 'test_loss'],
+                experiment_dir='every_k_dir/',
+                model_type='torch',
+                ckpt_time_to_track='num_updates',
+                save_every_k_ckpt=2)
 ```
 
 **Logging top-k checkpoints based on metric** :1st_place_medal:, :2nd_place_medal:, :3rd_place_medal:
@@ -145,14 +147,14 @@ log = MLELogger(time_to_track = ['num_updates', 'num_epochs'],
 ```python
 # Save top-3 checkpoints provided in log.update (stored in models/top_k)
 # Based on minimizing the test_loss metric
-log = MLELogger(time_to_track = ['num_updates', 'num_epochs'],
-                what_to_track = ['train_loss', 'test_loss'],
-                experiment_dir = "top_k_dir/",
-                model_type = 'torch',
-                ckpt_time_to_track = 'num_updates',
-                save_top_k_ckpt = 3,
-                top_k_metric_name = "test_loss",
-                top_k_minimize_metric = True)
+log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
+                what_to_track=['train_loss', 'test_loss'],
+                experiment_dir="top_k_dir/",
+                model_type='torch',
+                ckpt_time_to_track='num_updates',
+                save_top_k_ckpt=3,
+                top_k_metric_name="test_loss",
+                top_k_minimize_metric=True)
 ```
 
 ## Development
@@ -167,11 +169,7 @@ If you find a bug or are missing your favourite feature, feel free to contact me
 - [ ] Add transformations of time series
     - [ ] Running means
     - [ ] Smoothing of different degrees
-- [ ] Refactor logger into smaller pieces & test
-    - [ ] Save model
-    - [ ] Save figure
-    - [ ] Save extra
-    - [ ] Save log
+- [ ] Refactor logger into smaller pieces for easier debugging
 - [ ] Add rich print table messages for updates
 - [ ] Make logger more verbose (if desired)
 - [ ] Clean Up Tensorboard logging (for JAX/TF models)
