@@ -5,11 +5,10 @@ import shutil
 import time
 import datetime
 import h5py
-from rich.console import Console
-from rich.table import Table
-from rich import box
 from typing import Union, List, Dict
-from .utils import save_pkl_object, print_startup
+from .utils import save_pkl_object
+from .comms import print_welcome, print_startup, print_update
+from .save import ModelLog
 
 
 class MLELogger(object):
@@ -69,19 +68,26 @@ class MLELogger(object):
         self.fig_save_counter = 0
         self.fig_storage_paths: List[str] = []
 
+        # Set when to log and when to print
         self.log_every_j_steps = log_every_j_steps
         self.print_every_k_updates = print_every_k_updates
 
         # MODEL LOGGING SETUP: Type of model/every k-th ckpt/top k ckpt
-        assert model_type in ["torch", "tensorflow", "jax",
-                              "sklearn", "numpy",
-                              "no-model-type-provided"]
+        assert model_type in [
+            "torch",
+            "tensorflow",
+            "jax",
+            "sklearn",
+            "numpy",
+            "no-model-type-provided",
+        ]
         self.model_type = model_type
         self.ckpt_time_to_track = ckpt_time_to_track
         self.save_every_k_ckpt = save_every_k_ckpt
         self.save_top_k_ckpt = save_top_k_ckpt
         self.top_k_metric_name = top_k_metric_name
         self.top_k_minimize_metric = top_k_minimize_metric
+        self.seed_id = seed_id
 
         # Initialize lists for top k scores and to track storage times
         if self.save_every_k_ckpt is not None:
@@ -109,13 +115,14 @@ class MLELogger(object):
         if time_to_print is not None:
             self.time_to_print = ["time"] + time_to_print
         else:
-            self.time_to_print = None
+            self.time_to_print = []
         self.what_to_print = what_to_print
 
         if self.what_to_print is None:
             self.verbose = False
         else:
             self.verbose = len(self.what_to_print) > 0
+            print_welcome()
             print_startup(
                 self.experiment_dir,
                 self.time_to_track,
@@ -127,9 +134,6 @@ class MLELogger(object):
                 top_k_metric_name,
                 top_k_minimize_metric,
             )
-
-        # Keep the seed id around
-        self.seed_id = seed_id
 
         # Start stop-watch/clock of experiment
         self.start_time = time.time()
@@ -216,12 +220,12 @@ class MLELogger(object):
             )
 
         # Different extensions to model checkpoints based on model type
-        if self.model_type in ["torch", "tensorflow"]:
-            self.final_model_save_fname += ".pt"
-        elif self.model_type in ["jax", "sklearn"]:
-            self.final_model_save_fname += ".pkl"
-        elif self.model_type == "numpy":
-            self.final_model_save_fname += ".npy"
+        if self.model_type in ["torch", "tensorflow", "jax", "sklearn", "numpy"]:
+            if self.model_type in ["torch", "tensorflow"]:
+                self.model_fname_ext = ".pt"
+            elif self.model_type in ["jax", "sklearn", "numpy"]:
+                self.model_fname_ext = ".pkl"
+            self.final_model_save_fname += self.model_fname_ext
 
         # Delete old log file and tboard dir if overwrite allowed
         if overwrite_experiment_dir:
@@ -293,50 +297,7 @@ class MLELogger(object):
         # Print the most current results
         if self.verbose and self.print_every_k_updates is not None:
             if self.log_update_counter % self.print_every_k_updates == 0:
-                console = Console()
-                table = Table(
-                    show_header=True,
-                    row_styles=["none"],
-                    border_style="red",
-                    box=box.SIMPLE,
-                )
-                for i, c_label in enumerate(self.time_to_print):
-                    if i == 0:
-                        table.add_column(
-                            ":watch: [red]" + c_label + "[/red]",
-                            style="red",
-                            width=14,
-                            justify="left",
-                        )
-                    else:
-                        table.add_column(
-                            "[red]" + c_label + "[/red]",
-                            style="red",
-                            width=12,
-                            justify="center",
-                        )
-                for i, c_label in enumerate(self.what_to_print):
-                    if i == 0:
-                        table.add_column(
-                            ":open_book: [blue]" + c_label + "[/blue]",
-                            style="blue",
-                            width=14,
-                            justify="center",
-                        )
-                    else:
-                        table.add_column(
-                            "[blue]" + c_label + "[/blue]",
-                            style="blue",
-                            width=12,
-                            justify="center",
-                        )
-
-                row_list = pd.concat(
-                    [c_tick[self.time_to_print], s_tick[self.what_to_print]], axis=1
-                ).values.tolist()[0]
-                row_str_list = [str(v) for v in row_list]
-                table.add_row(*row_str_list)
-                console.print(table, justify="center")
+                print_update(self.time_to_print, self.what_to_print, c_tick, s_tick)
 
         # Save the log if boolean says so
         if save:
@@ -599,51 +560,17 @@ class MLELogger(object):
             self.setup_model_ckpt_dir()
 
         # CASE 1: SIMPLE STORAGE OF MOST RECENTLY LOGGED MODEL STATE
-        if self.model_type == "torch":
-            # Torch model case - save model state dict as .pt checkpoint
-            self.save_torch_model(self.final_model_save_fname, model)
-        elif self.model_type == "tensorflow":
-            model.save_weights(self.final_model_save_fname)
-        elif self.model_type in ["jax", "sklearn"]:
-            # JAX/sklearn save parameter dict/model as dictionary
-            save_pkl_object(model, self.final_model_save_fname)
-        elif self.model_type == "numpy":
-            np.save(self.final_model_save_fname, model)
-        else:
-            raise ValueError("Provide valid model_type [torch, jax, sklearn, numpy].")
+        save_model_ckpt(model, self.final_model_save_fname, self.model_type)
 
         # CASE 2: SEPARATE STORAGE OF EVERY K-TH LOGGED MODEL STATE
         if self.save_every_k_ckpt is not None:
             if self.log_save_counter % self.save_every_k_ckpt == 0:
-                if self.model_type == "torch":
-                    ckpt_path = (
-                        self.every_k_model_save_fname
-                        + str(self.model_save_counter)
-                        + ".pt"
-                    )
-                    self.save_torch_model(ckpt_path, model)
-                elif self.model_type == "tensorflow":
-                    ckpt_path = (
-                        self.every_k_model_save_fname
-                        + str(self.model_save_counter)
-                        + ".pt"
-                    )
-                    model.save_weights(ckpt_path)
-                elif self.model_type in ["jax", "sklearn"]:
-                    ckpt_path = (
-                        self.every_k_model_save_fname
-                        + str(self.model_save_counter)
-                        + ".pkl"
-                    )
-                    save_pkl_object(model, ckpt_path)
-                elif self.model_type == "numpy":
-                    ckpt_path = (
-                        self.every_k_model_save_fname
-                        + str(self.model_save_counter)
-                        + ".npy"
-                    )
-                    np.save(ckpt_path, model)
-                # Update model save count & time point of storage
+                ckpt_path = (
+                    self.every_k_model_save_fname
+                    + str(self.model_save_counter)
+                    + self.model_fname_ext
+                )
+                save_model_ckpt(model, ckpt_path, self.model_type)
                 # Use latest update performance for last checkpoint
                 time = self.clock_to_track[self.ckpt_time_to_track].to_numpy()[-1]
                 self.every_k_storage_time.append(time)
@@ -657,34 +584,12 @@ class MLELogger(object):
             time = self.clock_to_track[self.ckpt_time_to_track].to_numpy()[-1]
             # Fill up empty top k slots
             if len(self.top_k_performance) < self.save_top_k_ckpt:
-                if self.model_type == "torch":
-                    ckpt_path = (
-                        self.top_k_model_save_fname
-                        + str(len(self.top_k_performance))
-                        + ".pt"
-                    )
-                    self.save_torch_model(ckpt_path, model)
-                elif self.model_type == "tensorflow":
-                    ckpt_path = (
-                        self.top_k_model_save_fname
-                        + str(len(self.top_k_performance))
-                        + ".pt"
-                    )
-                    model.save_weights(ckpt_path)
-                elif self.model_type in ["jax", "sklearn"]:
-                    ckpt_path = (
-                        self.top_k_model_save_fname
-                        + str(len(self.top_k_performance))
-                        + ".pkl"
-                    )
-                    save_pkl_object(model, ckpt_path)
-                elif self.model_type == "numpy":
-                    ckpt_path = (
-                        self.top_k_model_save_fname
-                        + str(len(self.top_k_performance))
-                        + ".npy"
-                    )
-                    np.save(ckpt_path, model)
+                ckpt_path = (
+                    self.top_k_model_save_fname
+                    + str(len(self.top_k_performance))
+                    + self.model_fname_ext
+                )
+                save_model_ckpt(model, ckpt_path, self.model_type)
                 updated_top_k = True
                 self.top_k_performance.append(score)
                 self.top_k_storage_time.append(time)
@@ -699,22 +604,12 @@ class MLELogger(object):
                 id_to_replace = np.argmax(self.top_k_performance)
                 self.top_k_performance[id_to_replace] = score
                 self.top_k_storage_time[id_to_replace] = time
-                if self.model_type == "torch":
-                    ckpt_path = self.top_k_model_save_fname + str(id_to_replace) + ".pt"
-                    self.save_torch_model(ckpt_path, model)
-                elif self.model_type == "tensorflow":
-                    ckpt_path = self.top_k_model_save_fname + str(id_to_replace) + ".pt"
-                    model.save_weights(ckpt_path)
-                elif self.model_type in ["jax", "sklearn"]:
-                    ckpt_path = (
-                        self.top_k_model_save_fname + str(id_to_replace) + ".pkl"
-                    )
-                    save_pkl_object(model, ckpt_path)
-                elif self.model_type == "numpy":
-                    ckpt_path = (
-                        self.top_k_model_save_fname + str(id_to_replace) + ".npy"
-                    )
-                    np.save(ckpt_path, model)
+                ckpt_path = (
+                    self.top_k_model_save_fname
+                    + str(id_to_replace)
+                    + self.model_fname_ext
+                )
+                save_model_ckpt(model, ckpt_path, self.model_type)
                 updated_top_k = True
 
             # If minimize = replace worst performing model (max score)
@@ -728,62 +623,20 @@ class MLELogger(object):
                 self.top_k_storage_time[id_to_replace] = self.clock_to_track[
                     self.ckpt_time_to_track
                 ].to_numpy()[-1]
-                if self.model_type == "torch":
-                    ckpt_path = (
-                        self.top_k_model_save_fname
-                        + "_top_"
-                        + str(id_to_replace)
-                        + ".pt"
-                    )
-                    self.save_torch_model(ckpt_path, model)
-                elif self.model_type == "tensorflow":
-                    ckpt_path = (
-                        self.top_k_model_save_fname
-                        + "_top_"
-                        + str(id_to_replace)
-                        + ".pt"
-                    )
-                    model.save_weights(ckpt_path)
-                elif self.model_type in ["jax", "sklearn"]:
-                    ckpt_path = (
-                        self.top_k_model_save_fname
-                        + "_top_"
-                        + str(id_to_replace)
-                        + ".pkl"
-                    )
-                    save_pkl_object(model, ckpt_path)
-                elif self.model_type in ["numpy"]:
-                    ckpt_path = (
-                        self.top_k_model_save_fname
-                        + "_top_"
-                        + str(id_to_replace)
-                        + ".npy"
-                    )
-                    np.save(ckpt_path, model)
+                ckpt_path = (
+                    self.top_k_model_save_fname
+                    + "_top_"
+                    + str(id_to_replace)
+                    + self.model_fname_ext
+                )
+                save_model_ckpt(model, ckpt_path, self.model_type)
                 updated_top_k = True
-
-    def save_torch_model(self, path_to_store, model):
-        """Store a torch checkpoint for a model."""
-        try:
-            import torch
-        except ModuleNotFoundError as err:
-            raise ModuleNotFoundError(
-                f"{err}. You need to install "
-                "`torch` if you want to save a model "
-                "checkpoint."
-            )
-        # Update the saved weights in a single file!
-        torch.save(model.state_dict(), path_to_store)
 
     def save_plot(self, fig, fig_fname: Union[str, None] = None):
         """Store a figure in a experiment_id/figures directory."""
         # Create new directory to store figures - if it doesn't exist yet
         figures_dir = os.path.join(self.experiment_dir, "figures/")
-        if not os.path.exists(figures_dir):
-            try:
-                os.makedirs(figures_dir)
-            except Exception:
-                pass
+        os.makedirs(figures_dir, exist_ok=True)
 
         # Tick up counter, save figure, store new path to figure
         if fig_fname is None:
@@ -819,11 +672,7 @@ class MLELogger(object):
         """Helper fct. to save object (dict/etc.) as .pkl in exp. subdir."""
         extra_dir = os.path.join(self.experiment_dir, "extra/")
         # Create a new empty directory for the experiment
-        if not os.path.exists(extra_dir):
-            try:
-                os.makedirs(extra_dir)
-            except Exception:
-                pass
+        os.makedirs(extra_dir, exist_ok=True)
 
         # Tick up counter, save figure, store new path to figure
         if obj_fname is None:

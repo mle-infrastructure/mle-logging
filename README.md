@@ -6,7 +6,7 @@
 
 Simple logging of statistics, model checkpoints, plots and other objects for your Machine Learning Experiments (MLE). Furthermore, the `MLELogger` comes with smooth multi-seed result aggregation and combination of multi-configuration runs.
 
-![](/docs/mle_logger_structure.png)
+![](https://github.com/RobertTLange/mle-logging/blob/main/docs/mle_logger_structure.png)
 
 ## The API :video_game:
 

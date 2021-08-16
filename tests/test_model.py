@@ -225,7 +225,7 @@ def test_save_load_numpy():
     timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
     file_to_check = os.path.join(
         log_config["experiment_dir"], "models/final",
-        timestr + "_no_seed_provided.npy"
+        timestr + "_no_seed_provided.pkl"
     )
     assert os.path.exists(file_to_check)
 

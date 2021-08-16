@@ -60,7 +60,7 @@ class MetaLog(object):
             iter_to_plot,
             target_to_plot,
             smooth_window=1,
-            every_nth_tick=20,
+            every_nth_tick=None,
             num_legend_cols=2,
             plot_title=target_to_plot,
             xy_labels=[iter_to_plot, target_to_plot],

@@ -27,7 +27,7 @@ def load_model(ckpt_path: str, model_type: str, model=None):
         model = load_pkl_object(ckpt_path)
         return model
     elif model_type == "numpy":
-        model = np.load(ckpt_path)
+        model = np.load(ckpt_path, allow_pickle=True)
         return model
     else:
         raise ValueError(
