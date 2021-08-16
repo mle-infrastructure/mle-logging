@@ -1,5 +1,6 @@
 import pickle
 import pickle5
+from typing import Any
 
 
 def save_pkl_object(obj, filename: str) -> None:

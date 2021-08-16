@@ -6,9 +6,8 @@ import time
 import datetime
 import h5py
 from typing import Union, List, Dict
-from .utils import save_pkl_object
 from .comms import print_welcome, print_startup, print_update
-from .save import ModelLog
+from .save import ModelLog, FigureLog, ExtraLog
 
 
 class MLELogger(object):
@@ -62,39 +61,11 @@ class MLELogger(object):
         # Initialize counters of log - log, model, figures
         self.log_update_counter = 0
         self.log_save_counter = 0
-        self.model_save_counter = 0
-        self.extra_save_counter = 0
-        self.extra_storage_paths: List[str] = []
-        self.fig_save_counter = 0
-        self.fig_storage_paths: List[str] = []
+        self.seed_id = seed_id
 
         # Set when to log and when to print
         self.log_every_j_steps = log_every_j_steps
         self.print_every_k_updates = print_every_k_updates
-
-        # MODEL LOGGING SETUP: Type of model/every k-th ckpt/top k ckpt
-        assert model_type in [
-            "torch",
-            "tensorflow",
-            "jax",
-            "sklearn",
-            "numpy",
-            "no-model-type-provided",
-        ]
-        self.model_type = model_type
-        self.ckpt_time_to_track = ckpt_time_to_track
-        self.save_every_k_ckpt = save_every_k_ckpt
-        self.save_top_k_ckpt = save_top_k_ckpt
-        self.top_k_metric_name = top_k_metric_name
-        self.top_k_minimize_metric = top_k_minimize_metric
-        self.seed_id = seed_id
-
-        # Initialize lists for top k scores and to track storage times
-        if self.save_every_k_ckpt is not None:
-            self.every_k_storage_time: List[int] = []
-        if self.save_top_k_ckpt is not None:
-            self.top_k_performance: List[float] = []
-            self.top_k_storage_time: List[int] = []
 
         # Set up the logging directories - save the timestamped config file
         self.setup_experiment_dir(
@@ -104,6 +75,21 @@ class MLELogger(object):
             use_tboard,
             overwrite_experiment_dir,
         )
+
+        # MODEL LOGGING SETUP: Type of model/every k-th ckpt/top k ckpt
+        self.model_log = ModelLog(self.experiment_dir,
+                                  self.base_str,
+                                  self.seed_id,
+                                  model_type,
+                                  ckpt_time_to_track,
+                                  save_every_k_ckpt,
+                                  save_top_k_ckpt,
+                                  top_k_metric_name,
+                                  top_k_minimize_metric)
+
+        # FIGURE & EXTRA LOGGING SETUP
+        self.figure_log = FigureLog(self.experiment_dir, self.seed_id)
+        self.extra_log = ExtraLog(self.experiment_dir, self.seed_id)
 
         # Initialize pd dataframes to store logging stats/times
         self.time_to_track = ["time"] + time_to_track + ["time_elapsed"]
@@ -187,46 +173,6 @@ class MLELogger(object):
             + ".hdf5"
         )
 
-        # Create separate filenames for checkpoints & final trained model
-        self.final_model_save_fname = (
-            self.experiment_dir
-            + "models/final/"
-            + timestr
-            + self.base_str
-            + "_"
-            + seed_id
-        )
-        if self.save_every_k_ckpt is not None:
-            self.every_k_ckpt_list: List[str] = []
-            self.every_k_model_save_fname = (
-                self.experiment_dir
-                + "models/every_k/"
-                + timestr
-                + self.base_str
-                + "_"
-                + seed_id
-                + "_k_"
-            )
-        if self.save_top_k_ckpt is not None:
-            self.top_k_ckpt_list: List[str] = []
-            self.top_k_model_save_fname = (
-                self.experiment_dir
-                + "models/top_k/"
-                + timestr
-                + self.base_str
-                + "_"
-                + seed_id
-                + "_top_"
-            )
-
-        # Different extensions to model checkpoints based on model type
-        if self.model_type in ["torch", "tensorflow", "jax", "sklearn", "numpy"]:
-            if self.model_type in ["torch", "tensorflow"]:
-                self.model_fname_ext = ".pt"
-            elif self.model_type in ["jax", "sklearn", "numpy"]:
-                self.model_fname_ext = ".pkl"
-            self.final_model_save_fname += self.model_fname_ext
-
         # Delete old log file and tboard dir if overwrite allowed
         if overwrite_experiment_dir:
             if os.path.exists(self.log_save_fname):
@@ -301,16 +247,17 @@ class MLELogger(object):
 
         # Save the log if boolean says so
         if save:
-            # Save the most recent model checkpoint
-            if model is not None:
-                self.save_model(model)
-            # Save fig from matplotlib
-            if plot_fig is not None:
-                self.save_plot(plot_fig)
-            # Save .pkl object
-            if extra_obj is not None:
-                self.save_extra(extra_obj)
             self.save()
+
+        # Save the most recent model checkpoint
+        if model is not None:
+            self.save_model(model)
+        # Save fig from matplotlib
+        if plot_fig is not None:
+            self.save_plot(plot_fig)
+        # Save .pkl object
+        if extra_obj is not None:
+            self.save_extra(extra_obj)
 
     def update_tboard(  # noqa: C901
         self, clock_tick: dict, stats_tick: dict, model=None, plot_to_tboard=None
@@ -327,7 +274,7 @@ class MLELogger(object):
 
         # Log the model params & gradients
         if model is not None:
-            if self.model_type == "torch":
+            if self.model_log.model_type == "torch":
                 for name, param in model.named_parameters():
                     self.writer.add_histogram(
                         "weights/" + name, param.clone().cpu().data.numpy(), time_var_id
@@ -341,7 +288,7 @@ class MLELogger(object):
                         )
                     except Exception:
                         continue
-            elif self.model_type == "jax":
+            elif self.model_log.model_type == "jax":
                 # Try to add parameters from nested dict first - then simple
                 # TODO: Add gradient tracking for JAX models
                 for layer in model.keys():
@@ -373,7 +320,7 @@ class MLELogger(object):
         if self.log_save_counter == 0:
             h5f.create_dataset(
                 name=self.seed_id + "/meta/model_ckpt",
-                data=[self.final_model_save_fname.encode("ascii", "ignore")],
+                data=[self.model_log.final_model_save_fname.encode("ascii", "ignore")],
                 compression="gzip",
                 compression_opts=4,
                 dtype="S200",
@@ -408,25 +355,25 @@ class MLELogger(object):
             )
             h5f.create_dataset(
                 name=self.seed_id + "/meta/model_type",
-                data=[self.model_type.encode("ascii", "ignore")],
+                data=[self.model_log.model_type.encode("ascii", "ignore")],
                 compression="gzip",
                 compression_opts=4,
                 dtype="S200",
             )
 
-            if self.save_top_k_ckpt or self.save_every_k_ckpt:
+            if self.model_log.save_top_k_ckpt or self.model_log.save_every_k_ckpt:
                 h5f.create_dataset(
                     name=self.seed_id + "/meta/ckpt_time_to_track",
-                    data=[self.ckpt_time_to_track.encode("ascii", "ignore")],
+                    data=[self.model_log.ckpt_time_to_track.encode("ascii", "ignore")],
                     compression="gzip",
                     compression_opts=4,
                     dtype="S200",
                 )
 
-            if self.save_top_k_ckpt:
+            if self.model_log.save_top_k_ckpt:
                 h5f.create_dataset(
                     name=self.seed_id + "/meta/top_k_metric_name",
-                    data=[self.top_k_metric_name.encode("ascii", "ignore")],
+                    data=[self.model_log.top_k_metric_name.encode("ascii", "ignore")],
                     compression="gzip",
                     compression_opts=4,
                     dtype="S200",
@@ -482,29 +429,30 @@ class MLELogger(object):
             )
 
         # Store data on stored checkpoints - stored every k updates
-        if self.save_every_k_ckpt is not None:
-            if self.log_save_counter >= 1:
+        if self.model_log.save_every_k_ckpt is not None:
+            if self.model_log.model_save_counter >= 1:
                 for o_name in ["every_k_storage_time", "every_k_ckpt_list"]:
                     if h5f.get(self.seed_id + "/meta/" + o_name):
                         del h5f[self.seed_id + "/meta/" + o_name]
             h5f.create_dataset(
                 name=self.seed_id + "/meta/every_k_storage_time",
-                data=np.array(self.every_k_storage_time),
+                data=np.array(self.model_log.every_k_storage_time),
                 compression="gzip",
                 compression_opts=4,
                 dtype="float32",
             )
             h5f.create_dataset(
                 name=self.seed_id + "/meta/every_k_ckpt_list",
-                data=[t.encode("ascii", "ignore") for t in self.every_k_ckpt_list],
+                data=[t.encode("ascii", "ignore") for t
+                      in self.model_log.every_k_ckpt_list],
                 compression="gzip",
                 compression_opts=4,
                 dtype="S200",
             )
 
         #  Store data on stored checkpoints - stored top k ckpt
-        if self.save_top_k_ckpt is not None:
-            if self.log_save_counter >= 1:
+        if self.model_log.save_top_k_ckpt is not None:
+            if self.model_log.model_save_counter >= 1:
                 for o_name in [
                     "top_k_storage_time",
                     "top_k_ckpt_list",
@@ -514,21 +462,22 @@ class MLELogger(object):
                         del h5f[self.seed_id + "/meta/" + o_name]
             h5f.create_dataset(
                 name=self.seed_id + "/meta/top_k_storage_time",
-                data=np.array(self.top_k_storage_time),
+                data=np.array(self.model_log.top_k_storage_time),
                 compression="gzip",
                 compression_opts=4,
                 dtype="float32",
             )
             h5f.create_dataset(
                 name=self.seed_id + "/meta/top_k_ckpt_list",
-                data=[t.encode("ascii", "ignore") for t in self.top_k_ckpt_list],
+                data=[t.encode("ascii", "ignore") for t
+                      in self.model_log.top_k_ckpt_list],
                 compression="gzip",
                 compression_opts=4,
                 dtype="S200",
             )
             h5f.create_dataset(
                 name=self.seed_id + "/meta/top_k_performance",
-                data=np.array(self.top_k_performance),
+                data=np.array(self.model_log.top_k_performance),
                 compression="gzip",
                 compression_opts=4,
                 dtype="float32",
@@ -540,170 +489,37 @@ class MLELogger(object):
         # Tick the log save counter
         self.log_save_counter += 1
 
-    def setup_model_ckpt_dir(self):
-        """Create separate sub-dirs for checkpoints & final trained model."""
-        os.makedirs(os.path.join(self.experiment_dir, "models/final/"), exist_ok=True)
-        if self.save_every_k_ckpt is not None:
-            os.makedirs(
-                os.path.join(self.experiment_dir, "models/every_k/"), exist_ok=True
-            )
-        if self.save_top_k_ckpt is not None:
-            os.makedirs(
-                os.path.join(self.experiment_dir, "models/top_k/"), exist_ok=True
-            )
-
-    def save_model(self, model):  # noqa: C901
-        """Save current state of the model as a checkpoint."""
-        # If first model ckpt is saved - generate necessary directories
-        self.model_save_counter += 1
-        if self.model_save_counter == 1:
-            self.setup_model_ckpt_dir()
-
-        # CASE 1: SIMPLE STORAGE OF MOST RECENTLY LOGGED MODEL STATE
-        save_model_ckpt(model, self.final_model_save_fname, self.model_type)
-
-        # CASE 2: SEPARATE STORAGE OF EVERY K-TH LOGGED MODEL STATE
-        if self.save_every_k_ckpt is not None:
-            if self.log_save_counter % self.save_every_k_ckpt == 0:
-                ckpt_path = (
-                    self.every_k_model_save_fname
-                    + str(self.model_save_counter)
-                    + self.model_fname_ext
-                )
-                save_model_ckpt(model, ckpt_path, self.model_type)
-                # Use latest update performance for last checkpoint
-                time = self.clock_to_track[self.ckpt_time_to_track].to_numpy()[-1]
-                self.every_k_storage_time.append(time)
-                self.every_k_ckpt_list.append(ckpt_path)
-
-        # CASE 3: STORE TOP-K MODEL STATES BY SOME SCORE
-        if self.save_top_k_ckpt is not None:
-            updated_top_k = False
-            # Use latest update performance for last checkpoint
-            score = self.stats_to_track[self.top_k_metric_name].to_numpy()[-1]
-            time = self.clock_to_track[self.ckpt_time_to_track].to_numpy()[-1]
-            # Fill up empty top k slots
-            if len(self.top_k_performance) < self.save_top_k_ckpt:
-                ckpt_path = (
-                    self.top_k_model_save_fname
-                    + str(len(self.top_k_performance))
-                    + self.model_fname_ext
-                )
-                save_model_ckpt(model, ckpt_path, self.model_type)
-                updated_top_k = True
-                self.top_k_performance.append(score)
-                self.top_k_storage_time.append(time)
-                self.top_k_ckpt_list.append(ckpt_path)
-
-            # If minimize = replace worst performing model (max score)
-            if (
-                self.top_k_minimize_metric
-                and max(self.top_k_performance) > score
-                and not updated_top_k
-            ):
-                id_to_replace = np.argmax(self.top_k_performance)
-                self.top_k_performance[id_to_replace] = score
-                self.top_k_storage_time[id_to_replace] = time
-                ckpt_path = (
-                    self.top_k_model_save_fname
-                    + str(id_to_replace)
-                    + self.model_fname_ext
-                )
-                save_model_ckpt(model, ckpt_path, self.model_type)
-                updated_top_k = True
-
-            # If minimize = replace worst performing model (max score)
-            if (
-                not self.top_k_minimize_metric
-                and min(self.top_k_performance) > score
-                and not updated_top_k
-            ):
-                id_to_replace = np.argmin(self.top_k_performance)
-                self.top_k_performance[id_to_replace] = score
-                self.top_k_storage_time[id_to_replace] = self.clock_to_track[
-                    self.ckpt_time_to_track
-                ].to_numpy()[-1]
-                ckpt_path = (
-                    self.top_k_model_save_fname
-                    + "_top_"
-                    + str(id_to_replace)
-                    + self.model_fname_ext
-                )
-                save_model_ckpt(model, ckpt_path, self.model_type)
-                updated_top_k = True
+    def save_model(self, model):
+        """ Save a model checkpoint. """
+        self.model_log.save(model, self.clock_to_track, self.stats_to_track)
 
     def save_plot(self, fig, fig_fname: Union[str, None] = None):
         """Store a figure in a experiment_id/figures directory."""
-        # Create new directory to store figures - if it doesn't exist yet
-        figures_dir = os.path.join(self.experiment_dir, "figures/")
-        os.makedirs(figures_dir, exist_ok=True)
-
-        # Tick up counter, save figure, store new path to figure
-        if fig_fname is None:
-            self.fig_save_counter += 1
-            figure_fname = os.path.join(
-                figures_dir,
-                "fig_" + str(self.fig_save_counter) + "_" + str(self.seed_id) + ".png",
-            )
-        else:
-            figure_fname = os.path.join(
-                figures_dir,
-                fig_fname,
-            )
-
-        fig.savefig(figure_fname, dpi=300)
-        self.fig_storage_paths.append(figure_fname)
-
-        # Store figure paths if any where created
-        h5f = h5py.File(self.log_save_fname, "a")
-        if h5f.get(self.seed_id + "/meta/fig_storage_paths"):
-            del h5f[self.seed_id + "/meta/fig_storage_paths"]
-        h5f.create_dataset(
-            name=self.seed_id + "/meta/fig_storage_paths",
-            data=[t.encode("ascii", "ignore") for t in self.fig_storage_paths],
-            compression="gzip",
-            compression_opts=4,
-            dtype="S200",
-        )
-        h5f.flush()
-        h5f.close()
+        self.figure_log.save(fig, fig_fname)
+        write_to_hdf5_log(self.log_save_fname,
+                          self.seed_id + "/meta/fig_storage_paths",
+                          self.figure_log.fig_storage_paths)
 
     def save_extra(self, obj, obj_fname: Union[str, None] = None):
         """Helper fct. to save object (dict/etc.) as .pkl in exp. subdir."""
-        extra_dir = os.path.join(self.experiment_dir, "extra/")
-        # Create a new empty directory for the experiment
-        os.makedirs(extra_dir, exist_ok=True)
+        self.extra_log.save(obj, obj_fname)
+        write_to_hdf5_log(self.log_save_fname,
+                          self.seed_id + "/meta/extra_storage_paths",
+                          self.extra_log.extra_storage_paths)
 
-        # Tick up counter, save figure, store new path to figure
-        if obj_fname is None:
-            self.extra_save_counter += 1
-            obj_fname = os.path.join(
-                extra_dir,
-                "extra_"
-                + str(self.extra_save_counter)
-                + "_"
-                + str(self.seed_id)
-                + ".pkl",
-            )
-        else:
-            obj_fname = os.path.join(
-                extra_dir,
-                obj_fname,
-            )
 
-        save_pkl_object(obj, obj_fname)
-        self.extra_storage_paths.append(obj_fname)
-
-        # Store figure paths if any where created
-        h5f = h5py.File(self.log_save_fname, "a")
-        if h5f.get(self.seed_id + "/meta/extra_storage_paths"):
-            del h5f[self.seed_id + "/meta/extra_storage_paths"]
-        h5f.create_dataset(
-            name=self.seed_id + "/meta/extra_storage_paths",
-            data=[t.encode("ascii", "ignore") for t in self.extra_storage_paths],
-            compression="gzip",
-            compression_opts=4,
-            dtype="S200",
-        )
-        h5f.flush()
-        h5f.close()
+def write_to_hdf5_log(log_fname: str, log_path: str, data_to_log):
+    # Store figure paths if any where created
+    h5f = h5py.File(log_fname, "a")
+    if h5f.get(log_path):
+        del h5f[log_path]
+    h5f.create_dataset(
+        name=log_path,
+        data=[t.encode("ascii", "ignore") for t
+              in data_to_log],
+        compression="gzip",
+        compression_opts=4,
+        dtype="S200",
+    )
+    h5f.flush()
+    h5f.close()
