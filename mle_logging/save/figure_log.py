@@ -3,10 +3,13 @@ from typing import Union, List
 
 
 class FigureLog(object):
-    """ Figure Logger Class Instance. """
-    def __init__(self,
-                 experiment_dir: str = "/",
-                 seed_id: str = "no_seed_provided",):
+    """Figure Logger Class Instance."""
+
+    def __init__(
+        self,
+        experiment_dir: str = "/",
+        seed_id: str = "no_seed_provided",
+    ):
         # Setup figure logging directories
         self.experiment_dir = experiment_dir
         self.figures_dir = os.path.join(self.experiment_dir, "figures/")

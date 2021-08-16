@@ -4,10 +4,13 @@ from ..utils import save_pkl_object
 
 
 class ExtraLog(object):
-    """ Extra .pkl Object Logger Class Instance. """
-    def __init__(self,
-                 experiment_dir: str = "/",
-                 seed_id: str = "no_seed_provided",):
+    """Extra .pkl Object Logger Class Instance."""
+
+    def __init__(
+        self,
+        experiment_dir: str = "/",
+        seed_id: str = "no_seed_provided",
+    ):
         # Setup extra logging directories
         self.experiment_dir = experiment_dir
         self.extra_dir = os.path.join(self.experiment_dir, "extra/")

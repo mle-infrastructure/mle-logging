@@ -6,17 +6,20 @@ from ..utils import save_pkl_object
 
 
 class ModelLog(object):
-    """ Model Logger Class Instance. """
-    def __init__(self,
-                 experiment_dir: str = "/",
-                 base_str: str = "",
-                 seed_id: str = "no_seed_provided",
-                 model_type: str = "no-model-type-provided",
-                 ckpt_time_to_track: Union[str, None] = None,
-                 save_every_k_ckpt: Union[int, None] = None,
-                 save_top_k_ckpt: Union[int, None] = None,
-                 top_k_metric_name: Union[str, None] = None,
-                 top_k_minimize_metric: Union[bool, None] = None,):
+    """Model Logger Class Instance."""
+
+    def __init__(
+        self,
+        experiment_dir: str = "/",
+        base_str: str = "",
+        seed_id: str = "no_seed_provided",
+        model_type: str = "no-model-type-provided",
+        ckpt_time_to_track: Union[str, None] = None,
+        save_every_k_ckpt: Union[int, None] = None,
+        save_top_k_ckpt: Union[int, None] = None,
+        top_k_metric_name: Union[str, None] = None,
+        top_k_minimize_metric: Union[bool, None] = None,
+    ):
         # Setup model logging
         self.experiment_dir = experiment_dir
         assert model_type in [
@@ -45,12 +48,7 @@ class ModelLog(object):
         timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
         # Create separate filenames for checkpoints & final trained model
         self.final_model_save_fname = (
-            self.experiment_dir
-            + "models/final/"
-            + timestr
-            + base_str
-            + "_"
-            + seed_id
+            self.experiment_dir + "models/final/" + timestr + base_str + "_" + seed_id
         )
         if self.save_every_k_ckpt is not None:
             self.every_k_ckpt_list: List[str] = []
@@ -163,9 +161,7 @@ class ModelLog(object):
             self.top_k_performance[id_to_replace] = score
             self.top_k_storage_time[id_to_replace] = time
             ckpt_path = (
-                self.top_k_model_save_fname
-                + str(id_to_replace)
-                + self.model_fname_ext
+                self.top_k_model_save_fname + str(id_to_replace) + self.model_fname_ext
             )
             save_model_ckpt(model, ckpt_path, self.model_type)
 

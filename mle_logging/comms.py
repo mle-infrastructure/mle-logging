@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Any, Union
+from typing import Union
 from rich.console import Console
 from rich.panel import Panel
 from rich.columns import Columns
@@ -27,20 +27,20 @@ def print_welcome() -> None:
     )
     grid.add_row(
         welcome_ascii[1],
-        "  [link=https://tinyurl.com/srpy4nrp]You are awesome![/link] [not italic]:hugging_face:[/]",
+        "  [link=https://tinyurl.com/srpy4nrp]You are awesome![/link] [not italic]:hugging_face:[/]",  # noqa: E501
     )
 
     grid.add_row(
         welcome_ascii[2],
-        f"  [link=https://twitter.com/RobertTLange]@RobertTLange[/link] :bird:",
+        "  [link=https://twitter.com/RobertTLange]@RobertTLange[/link] :bird:",
     )
     grid.add_row(
         welcome_ascii[3],
-        f"  [link=https://roberttlange.github.io/mle-toolbox/logging/mle_logging/]MLE-Logging Docs[/link] [not italic]:notebook:[/]",
+        "  [link=https://roberttlange.github.io/mle-toolbox/logging/mle_logging/]MLE-Logging Docs[/link] [not italic]:notebook:[/]",  # noqa: E501
     )
     grid.add_row(
         welcome_ascii[4],
-        "  [link=https://github.com/RobertTLange/mle-logging/]MLE-Logging Repo[/link] [not italic]:pencil:[/]",
+        "  [link=https://github.com/RobertTLange/mle-logging/]MLE-Logging Repo[/link] [not italic]:pencil:[/]",  # noqa: E501
     )
     panel = Panel(grid, style="white on red", expand=False)
     console = Console()
@@ -70,8 +70,7 @@ def print_startup(
         else:
             return f"[b]{title}[/b]\n[{color}]{value}"
 
-    time_to_print = [t for t in time_to_track
-                     if t not in ["time", "time_elapsed"]]
+    time_to_print = [t for t in time_to_track if t not in ["time", "time_elapsed"]]
     renderables = [
         Panel(format_content("Log Directory", experiment_dir, "grey"), expand=True),
         Panel(format_content("Time Tracked", time_to_print, "red"), expand=True),
@@ -121,7 +120,6 @@ def print_update(time_to_print, what_to_print, c_tick, s_tick):
                 width=12,
                 justify="center",
             )
-
     row_list = pd.concat(
         [c_tick[time_to_print], s_tick[what_to_print].round(4)], axis=1
     ).values.tolist()[0]
@@ -132,21 +130,25 @@ def print_update(time_to_print, what_to_print, c_tick, s_tick):
 
 if __name__ == "__main__":
     print_welcome()
-    print_startup(experiment_dir="experiment_dir",
-                  time_to_track=["meta_loss"],
-                  what_to_track=["num_updates"],
-                  model_type="torch",
-                  ckpt_time_to_track="num_updates",
-                  save_every_k_ckpt=None,
-                  save_top_k_ckpt=2,
-                  top_k_metric_name="meta_loss",
-                  top_k_minimize_metric=True)
-    import pandas as pd
+    print_startup(
+        experiment_dir="experiment_dir",
+        time_to_track=["meta_loss"],
+        what_to_track=["num_updates"],
+        model_type="torch",
+        ckpt_time_to_track="num_updates",
+        save_every_k_ckpt=None,
+        save_top_k_ckpt=2,
+        top_k_metric_name="meta_loss",
+        top_k_minimize_metric=True,
+    )
+
     c_tick = pd.DataFrame(columns=["num_updates"])
     c_tick.loc[0] = [10]
     s_tick = pd.DataFrame(columns=["meta_loss", "train_loss", "test_loss"])
     s_tick.loc[0] = [0.124456356436, 0.13451345135, 0.1345531513]
-    print_update(time_to_print=["num_updates"],
-                 what_to_print=["meta_loss", "train_loss", "test_loss"],
-                 c_tick=c_tick,
-                 s_tick=s_tick)
+    print_update(
+        time_to_print=["num_updates"],
+        what_to_print=["meta_loss", "train_loss", "test_loss"],
+        c_tick=c_tick,
+        s_tick=s_tick,
+    )

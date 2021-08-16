@@ -163,14 +163,12 @@ If you find a bug or are missing your favourite feature, feel free to contact me
 
 
 ## Milestones for Next Release
+- [ ] Add rich print table messages for updates + add verbosity
 - [ ] Add reloading of previous log for seamless continuation of a run
 - [ ] No mean/stats for time variables when aggregating multiple seeds
 - [ ] Fix so that multi-config/seed indexing works via `meta_log.config_1.seed_1.stats`
 - [ ] Add transformations of time series
     - [ ] Running means
     - [ ] Smoothing of different degrees
-- [ ] Refactor logger into smaller pieces for easier debugging
-- [ ] Add rich print table messages for updates
-- [ ] Make logger more verbose (if desired)
-- [ ] Clean Up Tensorboard logging (for JAX/TF models)
-- [ ] Add Weights and Biases Support
+- [ ] Extend Tensorboard logging (for JAX/TF models)
+- [ ] Add Weights and Biases Backend Support
