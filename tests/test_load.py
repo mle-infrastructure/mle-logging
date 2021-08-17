@@ -109,9 +109,8 @@ def test_load_single():
             == b'experiment_dir/figures/fig_1_no_seed_provided.png')
     assert (relog.meta.extra_storage_paths
             == b'experiment_dir/extra/extra_1_no_seed_provided.pkl')
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
     assert (relog.meta.model_ckpt[0].decode()
-            == f'experiment_dir/models/final/{timestr}_no_seed_provided.pt')
+            == f'experiment_dir/models/final/final_no_seed_provided.pt')
     # Finally -- clean up
     shutil.rmtree(log_config["experiment_dir"])
 

@@ -1,6 +1,5 @@
 import os
 import shutil
-import datetime
 import numpy as np
 import torch.nn as nn
 from sklearn.svm import SVC
@@ -65,10 +64,9 @@ def test_save_load_torch():
     model = DummyModel()
     log.update(time_tic, stats_tic, model, save=True)
     # Assert the existence of the files
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
     file_to_check = os.path.join(
         log_config["experiment_dir"], "models/final",
-        timestr + "_no_seed_provided.pt"
+        "final_no_seed_provided.pt"
     )
     assert os.path.exists(file_to_check)
 
@@ -97,16 +95,15 @@ def test_save_load_tf():
     model = create_tensorflow_model()
     log.update(time_tic, stats_tic, model, save=True)
     # Assert the existence of the files
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
     file_to_check = os.path.join(
         log_config["experiment_dir"], "models/final",
-        timestr + "_no_seed_provided.pt"
+        "final_no_seed_provided.pt"
         + ".data-00000-of-00001"
     )
     assert os.path.exists(file_to_check)
     file_to_check = os.path.join(
         log_config["experiment_dir"], "models/final",
-        timestr + "_no_seed_provided.pt"
+        "final_no_seed_provided.pt"
         + ".index"
     )
     assert os.path.exists(file_to_check)
@@ -156,10 +153,9 @@ def test_save_load_jax():
 
     log.update(time_tic, stats_tic, params, save=True)
     # Assert the existence of the files
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
     file_to_check = os.path.join(
         log_config["experiment_dir"], "models/final",
-        timestr + "_no_seed_provided.pkl"
+        "final_no_seed_provided.pkl"
     )
     assert os.path.exists(file_to_check)
 
@@ -189,10 +185,9 @@ def test_save_load_sklearn():
     log.update(time_tic, stats_tic, model, save=True)
 
     # Assert the existence of the files
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
     file_to_check = os.path.join(
         log_config["experiment_dir"], "models/final",
-        timestr + "_no_seed_provided.pkl"
+        "final_no_seed_provided.pkl"
     )
     assert os.path.exists(file_to_check)
 
@@ -222,10 +217,9 @@ def test_save_load_numpy():
     log.update(time_tic, stats_tic, model, save=True)
 
     # Assert the existence of the files
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
     file_to_check = os.path.join(
         log_config["experiment_dir"], "models/final",
-        timestr + "_no_seed_provided.pkl"
+        "final_no_seed_provided.pkl"
     )
     assert os.path.exists(file_to_check)
 

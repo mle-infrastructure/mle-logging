@@ -58,9 +58,8 @@ def test_update_log():
     # Assert the existence of the files
     assert os.path.exists(os.path.join(log_config["experiment_dir"], "logs"))
     assert os.path.exists(os.path.join(log_config["experiment_dir"], "tboards"))
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "logs", timestr + "_no_seed_provided.hdf5"
+        log_config["experiment_dir"], "logs", "log_no_seed_provided.hdf5"
     )
     assert os.path.exists(file_to_check)
 
@@ -130,14 +129,13 @@ def test_all_in_one():
     # Assert the existence of the files
     assert os.path.exists(os.path.join(log_config["experiment_dir"], "logs"))
     assert os.path.exists(os.path.join(log_config["experiment_dir"], "tboards"))
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "logs", timestr + "_no_seed_provided.hdf5"
+        log_config["experiment_dir"], "logs", "log_no_seed_provided.hdf5"
     )
     assert os.path.exists(file_to_check)
 
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final", timestr + "_no_seed_provided.pt"
+        log_config["experiment_dir"], "models/final", "final_no_seed_provided.pt"
     )
     assert os.path.exists(file_to_check)
 

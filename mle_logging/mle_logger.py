@@ -55,6 +55,7 @@ class MLELogger(object):
         save_top_k_ckpt: Union[int, None] = None,
         top_k_metric_name: Union[str, None] = None,
         top_k_minimize_metric: Union[bool, None] = None,
+        reload: bool = False,
     ):
         # Set up tensorboard when/where to log and when to print
         self.use_tboard = use_tboard
@@ -70,35 +71,28 @@ class MLELogger(object):
             config_fname,
             self.seed_id,
             overwrite_experiment_dir,
+            reload,
         )
-        self.log_save_fname = (
-            self.experiment_dir
-            + "logs/"
-            + self.timestr
-            + self.base_str
-            + "_"
-            + seed_id
-            + ".hdf5"
-        )
+        self.log_save_fname = self.experiment_dir + "logs/" + "log_" + seed_id + ".hdf5"
         os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
 
         # STATS & TENSORBOARD LOGGING SETUP
         self.stats_log = StatsLog(
             self.experiment_dir,
-            self.base_str,
             self.seed_id,
             time_to_track,
             what_to_track,
+            reload,
         )
         if self.use_tboard:
             self.tboard_log = TboardLog(
-                self.experiment_dir, self.base_str, self.seed_id
+                self.experiment_dir,
+                self.seed_id,
             )
 
         # MODEL, FIGURE & EXTRA LOGGING SETUP
         self.model_log = ModelLog(
             self.experiment_dir,
-            self.base_str,
             self.seed_id,
             model_type,
             ckpt_time_to_track,
@@ -106,9 +100,19 @@ class MLELogger(object):
             save_top_k_ckpt,
             top_k_metric_name,
             top_k_minimize_metric,
+            reload,
         )
-        self.figure_log = FigureLog(self.experiment_dir, self.seed_id)
-        self.extra_log = ExtraLog(self.experiment_dir, self.seed_id)
+
+        self.figure_log = FigureLog(
+            self.experiment_dir,
+            self.seed_id,
+            reload,
+        )
+        self.extra_log = ExtraLog(
+            self.experiment_dir,
+            self.seed_id,
+            reload,
+        )
 
         # VERBOSITY SETUP: Set up what to print
         if time_to_print is not None:
@@ -140,24 +144,32 @@ class MLELogger(object):
         config_fname: Union[str, None],
         seed_id: str,
         overwrite_experiment_dir: bool = False,
+        reload: bool = False,
     ) -> None:
         """Setup a directory for experiment & copy over config."""
         # Get timestamp of experiment & create new directories
         if config_fname is not None:
             self.base_str = "_" + os.path.split(config_fname)[1].split(".")[0]
-            self.experiment_dir = os.path.join(
-                base_exp_dir, self.timestr + self.base_str + "/"
-            )
+            if not reload:
+                self.experiment_dir = os.path.join(
+                    base_exp_dir, self.timestr + self.base_str + "/"
+                )
+            else:
+                # Don't redefine experiment directory but get already existing
+                exp_dir = [
+                    f for f in os.listdir(base_exp_dir) if f.endswith(self.base_str)
+                ][0]
+                self.experiment_dir = os.path.join(base_exp_dir, exp_dir)
         else:
             self.base_str = ""
             self.experiment_dir = base_exp_dir
 
         # Delete old experiment logging directory
-        if overwrite_experiment_dir:
+        if overwrite_experiment_dir and not reload:
             if os.path.exists(self.experiment_dir):
                 shutil.rmtree(self.experiment_dir)
 
-        # Create a new empty directory for the experiment
+        # Create a new empty directory for the experiment (if not existing)
         os.makedirs(self.experiment_dir, exist_ok=True)
 
         # Copy over json configuration file if it exists
@@ -256,14 +268,14 @@ class MLELogger(object):
                 write_to_hdf5(
                     self.log_save_fname,
                     self.seed_id + "/meta/ckpt_time_to_track",
-                    [self.model_log.ckpt_time_to_track.encode("ascii", "ignore")],
+                    [self.model_log.ckpt_time_to_track],
                 )
 
             if self.model_log.save_top_k_ckpt:
                 write_to_hdf5(
                     self.log_save_fname,
                     self.seed_id + "/meta/top_k_metric_name",
-                    [self.model_log.top_k_metric_name.encode("ascii", "ignore")],
+                    [self.model_log.top_k_metric_name],
                 )
 
         # Store all time_to_track variables

@@ -1,8 +1,8 @@
 import os
-import datetime
 import numpy as np
 from typing import Union, List
 from ..utils import save_pkl_object
+from ..load import load_log
 
 
 class ModelLog(object):
@@ -11,7 +11,6 @@ class ModelLog(object):
     def __init__(
         self,
         experiment_dir: str = "/",
-        base_str: str = "",
         seed_id: str = "no_seed_provided",
         model_type: str = "no-model-type-provided",
         ckpt_time_to_track: Union[str, None] = None,
@@ -19,6 +18,7 @@ class ModelLog(object):
         save_top_k_ckpt: Union[int, None] = None,
         top_k_metric_name: Union[str, None] = None,
         top_k_minimize_metric: Union[bool, None] = None,
+        reload: bool = False,
     ):
         # Setup model logging
         self.experiment_dir = experiment_dir
@@ -36,41 +36,23 @@ class ModelLog(object):
         self.ckpt_time_to_track = ckpt_time_to_track
         self.top_k_metric_name = top_k_metric_name
         self.top_k_minimize_metric = top_k_minimize_metric
-        self.model_save_counter = 0
 
-        # Initialize lists for top k scores and to track storage times
-        if self.save_every_k_ckpt is not None:
-            self.every_k_storage_time: List[int] = []
-        if self.save_top_k_ckpt is not None:
-            self.top_k_performance: List[float] = []
-            self.top_k_storage_time: List[int] = []
-
-        timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
         # Create separate filenames for checkpoints & final trained model
-        self.final_model_save_fname = (
-            self.experiment_dir + "models/final/" + timestr + base_str + "_" + seed_id
+        self.final_ckpt_dir = os.path.join(self.experiment_dir, "models/final/")
+        self.final_model_save_fname = os.path.join(
+            self.final_ckpt_dir, "final_" + seed_id
         )
         if self.save_every_k_ckpt is not None:
             self.every_k_ckpt_list: List[str] = []
-            self.every_k_model_save_fname = (
-                self.experiment_dir
-                + "models/every_k/"
-                + timestr
-                + base_str
-                + "_"
-                + seed_id
-                + "_k_"
+            self.every_k_dir = os.path.join(self.experiment_dir, "models/every_k/")
+            self.every_k_model_save_fname = os.path.join(
+                self.every_k_dir, "every_k_" + seed_id + "_k_"
             )
         if self.save_top_k_ckpt is not None:
             self.top_k_ckpt_list: List[str] = []
-            self.top_k_model_save_fname = (
-                self.experiment_dir
-                + "models/top_k/"
-                + timestr
-                + base_str
-                + "_"
-                + seed_id
-                + "_top_"
+            self.top_k_dir = os.path.join(self.experiment_dir, "models/top_k/")
+            self.top_k_model_save_fname = os.path.join(
+                self.top_k_dir, "top_k_" + seed_id + "_top_"
             )
 
         # Different extensions to model checkpoints based on model type
@@ -81,17 +63,24 @@ class ModelLog(object):
                 self.model_fname_ext = ".pkl"
             self.final_model_save_fname += self.model_fname_ext
 
+        # Initialize counter & lists for top k scores and storage time to track
+        if reload:
+            self.reload()
+        else:
+            self.model_save_counter = 0
+            if self.save_every_k_ckpt is not None:
+                self.every_k_storage_time: List[int] = []
+            if self.save_top_k_ckpt is not None:
+                self.top_k_performance: List[float] = []
+                self.top_k_storage_time: List[int] = []
+
     def setup_model_ckpt_dir(self):
         """Create separate sub-dirs for checkpoints & final trained model."""
-        os.makedirs(os.path.join(self.experiment_dir, "models/final/"), exist_ok=True)
+        os.makedirs(self.final_ckpt_dir, exist_ok=True)
         if self.save_every_k_ckpt is not None:
-            os.makedirs(
-                os.path.join(self.experiment_dir, "models/every_k/"), exist_ok=True
-            )
+            os.makedirs(self.every_k_dir, exist_ok=True)
         if self.save_top_k_ckpt is not None:
-            os.makedirs(
-                os.path.join(self.experiment_dir, "models/top_k/"), exist_ok=True
-            )
+            os.makedirs(self.top_k_dir, exist_ok=True)
 
     def save(self, model, clock_to_track, stats_to_track):  # noqa: C901
         """Save current state of the model as a checkpoint."""
@@ -165,6 +154,43 @@ class ModelLog(object):
             )
             save_model_ckpt(model, ckpt_path, self.model_type)
 
+    def reload(self):
+        """Reload results from previous experiment run."""
+        reloaded_log = load_log(self.experiment_dir)
+        # Make sure to reload in results for correct seed
+        if reloaded_log.eval_ids is None:
+            meta_data = reloaded_log.meta
+        else:
+            meta_data = reloaded_log[self.seed_id].meta
+
+        # Reload counter & lists for top k scores and storage time to track
+        if self.save_every_k_ckpt is not None:
+            self.every_k_ckpt_list = [ck.decode() for ck in meta_data.every_k_ckpt_list]
+            self.every_k_storage_time = meta_data.every_k_storage_time
+            self.model_save_counter = int(
+                self.every_k_ckpt_list[-1].split(self.model_fname_ext)[0][-1]
+            )
+        else:
+            self.model_save_counter = 0
+        if self.save_top_k_ckpt is not None:
+            self.top_k_ckpt_list = [ck.decode() for ck in meta_data.top_k_ckpt_list]
+            self.top_k_storage_time = meta_data.top_k_storage_time
+            self.top_k_performance = meta_data.top_k_storage_time.tolist()
+
+
+def save_model_ckpt(model, model_save_fname: str, model_type: str) -> None:
+    """Save the most recent model checkpoint."""
+    if model_type == "torch":
+        # Torch model case - save model state dict as .pt checkpoint
+        save_torch_model(model_save_fname, model)
+    elif model_type == "tensorflow":
+        model.save_weights(model_save_fname)
+    elif model_type in ["jax", "sklearn", "numpy"]:
+        # JAX/sklearn save parameter dict/model as dictionary
+        save_pkl_object(model, model_save_fname)
+    else:
+        raise ValueError("Provide valid model_type [torch, jax, sklearn, numpy].")
+
 
 def save_torch_model(path_to_store: str, model) -> None:
     """Store a torch checkpoint for a model."""
@@ -183,17 +209,3 @@ def save_torch_model(path_to_store: str, model) -> None:
 def save_tensorflow_model(path_to_store: str, model) -> None:
     """Store a tensorflow checkpoint for a model."""
     model.save_weights(path_to_store)
-
-
-def save_model_ckpt(model, model_save_fname: str, model_type: str) -> None:
-    """Save the most recent model checkpoint."""
-    if model_type == "torch":
-        # Torch model case - save model state dict as .pt checkpoint
-        save_torch_model(model_save_fname, model)
-    elif model_type == "tensorflow":
-        model.save_weights(model_save_fname)
-    elif model_type in ["jax", "sklearn", "numpy"]:
-        # JAX/sklearn save parameter dict/model as dictionary
-        save_pkl_object(model, model_save_fname)
-    else:
-        raise ValueError("Provide valid model_type [torch, jax, sklearn, numpy].")

@@ -1,5 +1,4 @@
 import numpy as np
-import datetime
 from typing import Dict
 
 
@@ -9,7 +8,6 @@ class TboardLog(object):
     def __init__(
         self,
         experiment_dir: str,
-        base_str: str,
         seed_id: str,
     ):
         # Setup figure logging directories
@@ -22,12 +20,7 @@ class TboardLog(object):
                 "MLELogger logs to tensorboard."
             )
         self.writer = SummaryWriter(
-            experiment_dir
-            + "tboards/"
-            + datetime.datetime.today().strftime("%Y-%m-%d")[2:]
-            + base_str
-            + "_"
-            + seed_id
+            experiment_dir + "/tboards/" + "tboard" + "_" + seed_id
         )
 
     def update(  # noqa: C901

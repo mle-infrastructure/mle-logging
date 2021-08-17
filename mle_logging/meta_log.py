@@ -73,8 +73,8 @@ class MetaLog(object):
         """Get ids of runs stored in meta_log instance."""
         if self.num_configs > 1:
             return list(self.meta_log.keys())
-        else:
-            print("Only single aggregated configuration or random seed loaded.")
+        # else:
+        #     print("Only single aggregated configuration or random seed loaded.")
 
     def __len__(self) -> int:
         """Return number of runs stored in meta_log."""

@@ -24,7 +24,10 @@ def write_to_hdf5(
 ) -> None:
     # Store figure paths if any where created
     if dtype == "S200":
-        data_to_store = [t.encode("ascii", "ignore") for t in data_to_log]
+        try:
+            data_to_store = [t.encode("ascii", "ignore") for t in data_to_log]
+        except AttributeError:
+            data_to_store = data_to_log
     else:
         data_to_store = np.array(data_to_log)
 

@@ -1,4 +1,5 @@
 import os
+from os.path import isfile, join
 from typing import Union, List
 from ..utils import save_pkl_object
 
@@ -10,13 +11,19 @@ class ExtraLog(object):
         self,
         experiment_dir: str = "/",
         seed_id: str = "no_seed_provided",
+        reload: bool = False,
     ):
         # Setup extra logging directories
         self.experiment_dir = experiment_dir
         self.extra_dir = os.path.join(self.experiment_dir, "extra/")
-        self.extra_save_counter = 0
-        self.extra_storage_paths: List[str] = []
         self.seed_id = seed_id
+
+        # Reload filenames and counter from previous execution
+        if reload:
+            self.reload()
+        else:
+            self.extra_save_counter = 0
+            self.extra_storage_paths: List[str] = []
 
     def save(self, obj, obj_fname: Union[str, None] = None):
         """Store a .pkl object."""
@@ -44,3 +51,18 @@ class ExtraLog(object):
 
         save_pkl_object(obj, obj_fname)
         self.extra_storage_paths.append(obj_fname)
+
+    def reload(self):
+        """Reload results from previous experiment run."""
+        # Go into extra directory, get list of files and set counter
+        try:
+            extra_paths = [
+                f for f in os.listdir(self.extra_dir) if isfile(join(self.extra_dir, f))
+            ]
+            self.extra_storage_paths = [
+                f for f in extra_paths if f.endswith(str(self.seed_id) + ".pkl")
+            ]
+            self.extra_save_counter = len(self.extra_storage_paths)
+        except FileNotFoundError:
+            self.extra_save_counter = 0
+            self.extra_storage_paths: List[str] = []
