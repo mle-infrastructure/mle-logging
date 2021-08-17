@@ -55,7 +55,7 @@ class StatsLog(object):
             + [time.time() - self.start_time]
         )
         s_tick = pd.DataFrame(columns=self.what_to_track)
-        s_tick.loc[0] = [stats_tick[k] for k in self.stats_to_track]
+        s_tick.loc[0] = [stats_tick[k] for k in self.what_to_track]
 
         # Append time tick & results to pandas dataframes
         self.clock_to_track = pd.concat(

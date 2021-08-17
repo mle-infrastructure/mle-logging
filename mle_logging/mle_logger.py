@@ -188,7 +188,7 @@ class MLELogger(object):
         plot_fig=None,
         extra_obj=None,
         save=False,
-    ):
+    ) -> None:
         """Update with the newest tick of performance stats, net weights"""
         # Update the stats log with newest timeseries data
         c_tick, s_tick = self.stats_log.update(clock_tick, stats_tick)

@@ -52,7 +52,7 @@ class FigureLog(object):
         # Go into figures directory, get list of figure files and set counter
         try:
             fig_paths = [
-                f
+                join(self.figures_dir, f)
                 for f in os.listdir(self.figures_dir)
                 if isfile(join(self.figures_dir, f))
             ]

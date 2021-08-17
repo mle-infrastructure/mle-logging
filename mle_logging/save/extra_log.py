@@ -57,7 +57,9 @@ class ExtraLog(object):
         # Go into extra directory, get list of files and set counter
         try:
             extra_paths = [
-                f for f in os.listdir(self.extra_dir) if isfile(join(self.extra_dir, f))
+                join(self.extra_dir, f)
+                for f in os.listdir(self.extra_dir)
+                if isfile(join(self.extra_dir, f))
             ]
             self.extra_storage_paths = [
                 f for f in extra_paths if f.endswith(str(self.seed_id) + ".pkl")
