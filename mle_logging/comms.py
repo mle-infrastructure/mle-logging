@@ -6,53 +6,60 @@ from rich.columns import Columns
 from rich.table import Table
 from rich import box
 import datetime
+from ._version import __version__
 
 
 def print_welcome() -> None:
     """Display header with clock and general toolbox configurations."""
-    welcome_ascii = """███╗   ███╗██╗     ███████╗      ██╗      ██████╗  ██████╗
-████╗ ████║██║     ██╔════╝      ██║     ██╔═══██╗██╔════╝
-██╔████╔██║██║     █████╗  █████╗██║     ██║   ██║██║  ███╗
-██║╚██╔╝██║██║     ██╔══╝  ╚════╝██║     ██║   ██║██║   ██║
-██║ ╚═╝ ██║███████╗███████╗      ███████╗╚██████╔╝╚██████╔╝
-╚═╝     ╚═╝╚══════╝╚══════╝      ╚══════╝ ╚═════╝  ╚═════╝
+    welcome_ascii = r"""
+ __    __  __      ______  __      ______  ______
+/\ "-./  \/\ \    /\  ___\/\ \    /\  __ \/\  ___\
+\ \ \-./\ \ \ \___\ \  __\  \ \___\ \ \/\ \ \ \__ \
+ \ \_\ \ \_\ \_____\ \_____\ \_____\ \_____\ \_____\
+  \/_/  \/_/\/_____/\/_____/\/_____/\/_____/\/_____/
     """.splitlines()
-
     grid = Table.grid(expand=True)
-    grid.add_column(justify="left")
+    grid.add_column(justify="center")
     grid.add_column(justify="right")
     grid.add_row(
-        welcome_ascii[0],
-        datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-    )
-    grid.add_row(
         welcome_ascii[1],
-        "  [link=https://tinyurl.com/srpy4nrp]You are awesome![/link] [not italic]:hugging_face:[/]",  # noqa: E501
+        datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"),
     )
-
     grid.add_row(
         welcome_ascii[2],
+        f"Logger v{__version__} :lock_with_ink_pen:"
+    )
+    # grid.add_row(
+    #     welcome_ascii[3],
+    #     "  [link=https://live.staticflickr.com/2061/2306127707_2607857c2d_z.jpg]U r awesome![/link] :hugging_face:",  # noqa: E501
+    # )
+
+    grid.add_row(
+        welcome_ascii[3],
         "  [link=https://twitter.com/RobertTLange]@RobertTLange[/link] :bird:",
     )
     grid.add_row(
-        welcome_ascii[3],
-        "  [link=https://roberttlange.github.io/mle-toolbox/logging/mle_logging/]MLE-Logging Docs[/link] [not italic]:notebook:[/]",  # noqa: E501
+        welcome_ascii[4],
+        "  [link=https://github.com/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb]MLE-Log Docs[/link] [not italic]:notebook:[/]",  # noqa: E501
     )
     grid.add_row(
-        welcome_ascii[4],
-        "  [link=https://github.com/RobertTLange/mle-logging/]MLE-Logging Repo[/link] [not italic]:pencil:[/]",  # noqa: E501
+        welcome_ascii[5],
+        "  [link=https://github.com/RobertTLange/mle-logging/]MLE-Log Repo[/link] [not italic]:pencil:[/]",  # noqa: E501
     )
-    panel = Panel(grid, style="white on red", expand=False)
-    console = Console()
-    console.print(panel)
+    panel = Panel(grid, style="white on red", expand=True)
+    Console().print(panel)
 
 
 def print_startup(
     experiment_dir: str,
+    config_fname: Union[str, None],
     time_to_track: list,
     what_to_track: list,
     model_type: str,
     seed_id: str,
+    use_tboard: bool,
+    reload: bool,
+    print_every_k_updates: Union[int, None],
     ckpt_time_to_track: Union[str, None],
     save_every_k_ckpt: Union[int, None],
     save_top_k_ckpt: Union[int, None],
@@ -62,24 +69,45 @@ def print_startup(
     """Rich print statement at logger startup."""
     console = Console()
 
-    def format_content(title, value, color):
+    grid = Table.grid(expand=True)
+    grid.add_column(justify="left")
+    grid.add_column(justify="left")
+
+    def format_content(title, value):
         if type(value) == list:
-            base = f"[b]{title}[/b]"
-            for v in value:
-                base += f"\n[{color}]{v}"
+            base = f"[b]{title}[/b]: "
+            for i, v in enumerate(value):
+                base += f"{v}"
+                if i < len(value)-1:
+                    base += ", "
             return base
         else:
-            return f"[b]{title}[/b]\n[{color}]{value}"
+            return f"[b]{title}[/b]: {value}"
 
     time_to_print = [t for t in time_to_track if t not in ["time", "time_elapsed"]]
     renderables = [
-        Panel(format_content("Log Directory", experiment_dir, "grey"), expand=True),
-        Panel(format_content("Time Tracked", time_to_print, "red"), expand=True),
-        Panel(format_content("Stats Tracked", what_to_track, "blue"), expand=True),
-        Panel(format_content("Models Tracked", model_type, "green"), expand=True),
-        Panel(format_content("Seed ID", seed_id, "orange"), expand=True),
+        Panel(format_content(":book: Log Dir", experiment_dir), expand=True),
+        Panel(format_content(":page_facing_up: Config", config_fname), expand=True),
+        Panel(format_content(":watch: Time", time_to_print), expand=True),
+        Panel(format_content(":chart_with_downwards_trend: Stats", what_to_track), expand=True),
+        Panel(format_content(":seedling: Seed ID", seed_id), expand=True),
+        Panel(format_content(":chart_with_upwards_trend: Tensorboard", use_tboard), expand=True),
+        Panel(format_content(":rocket: Model", model_type), expand=True),
+        Panel(format_content("Tracked ckpt Time", ckpt_time_to_track), expand=True),
+        Panel(format_content(":clock1130: Every k-th ckpt", save_every_k_ckpt), expand=True),
+        Panel(format_content(":trident: Top k ckpt", save_top_k_ckpt), expand=True),
+        Panel(format_content("Top k-th metric", top_k_metric_name), expand=True),
+        Panel(format_content("Top k-th minimization", top_k_minimize_metric), expand=True),
     ]
-    console.print(Columns(renderables))
+
+    grid.add_row(renderables[0], renderables[1])
+    grid.add_row(renderables[2], renderables[3])
+    grid.add_row(renderables[4], renderables[6])
+    grid.add_row(renderables[8], renderables[9])
+    # grid.add_row(renderables[8], renderables[9])
+    # grid.add_row(renderables[10], renderables[11])
+    panel = Panel(grid, expand=True)
+    Console().print(panel)
 
 
 def print_update(time_to_print, what_to_print, c_tick, s_tick):
@@ -110,7 +138,7 @@ def print_update(time_to_print, what_to_print, c_tick, s_tick):
     for i, c_label in enumerate(what_to_print):
         if i == 0:
             table.add_column(
-                ":open_book: [blue]" + c_label + "[/blue]",
+                ":chart_with_downwards_trend: [blue]" + c_label + "[/blue]",
                 style="blue",
                 width=14,
                 justify="center",

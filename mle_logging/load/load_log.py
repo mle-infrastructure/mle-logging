@@ -22,7 +22,9 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
     2. Single config - multi seed = aggregation - seed_id -> meta, stats, time
     3. Multi config - multi seed = aggregation - config_id -> seed_id -> ...
     """
-    case_1 = (len(run_names) == 1 and run_names[0] == 'no_seed_provided')
+    case_1 = (len(run_names) == 1 and
+              collections.Counter(h5f[run_names[0]].keys())
+              == collections.Counter(data_types))
     case_2 = (len(run_names) > 1 and
               collections.Counter(h5f[run_names[0]].keys())
               == collections.Counter(data_types))

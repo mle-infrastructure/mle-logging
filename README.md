@@ -4,9 +4,9 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb)
 
-Simple logging of statistics, model checkpoints, plots and other objects for your Machine Learning Experiments (MLE). Furthermore, the `MLELogger` comes with smooth multi-seed result aggregation and combination of multi-configuration runs.
+Simple logging of statistics, model checkpoints, plots and other objects for your Machine Learning Experiments (MLE). Furthermore, the `MLELogger` comes with smooth multi-seed result aggregation and combination of multi-configuration runs. For a quickstart checkout the [notebook blog](https://github.com/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb) :rocket:
 
-![](https://github.com/RobertTLange/mle-logging/blob/main/docs/mle_logger_structure.png)
+![](https://github.com/RobertTLange/mle-logging/blob/main/docs/mle_logger_structure.png?raw=true)
 
 ## The API :video_game:
 
@@ -19,10 +19,8 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
                 experiment_dir="experiment_dir/",
                 model_type='torch')
 
-time_tic = {'num_updates': 10,
-            'num_epochs': 1}
-stats_tic = {'train_loss': 0.1234,
-             'test_loss': 0.1235}
+time_tic = {'num_updates': 10, 'num_epochs': 1}
+stats_tic = {'train_loss': 0.1234, 'test_loss': 0.1235}
 
 # Update the log with collected data & save it to .hdf5
 log.update(time_tic, stats_tic)
@@ -32,7 +30,7 @@ log.save()
 You can also log model checkpoints, matplotlib figures and other `.pkl` compatible objects.
 
 ```python
-# Save a model (torch, sklearn, jax, numpy)
+# Save a model (torch, tensorflow, sklearn, jax, numpy)
 import torchvision.models as models
 model = models.resnet18()
 log.save_model(model)
@@ -83,7 +81,7 @@ log_out = load_log("experiment_dir/")
 # odict_keys(['num_epochs', 'num_updates', 'time_elapsed'])
 ```
 
-If an experiment is aborted, you can reload and continue the previous run via the `reload=True` option:
+If an experiment was aborted, you can reload and continue the previous run via the `reload=True` option:
 
 ```python
 log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
@@ -93,7 +91,7 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
                 reload=True)
 ```
 
-## Installation :memo:
+## Installation :pencil:
 
 A PyPI installation is available via:
 
@@ -110,7 +108,7 @@ pip install -e .
 ```
 
 
-## Advanced Options :mage:
+## Advanced Options :bicyclist:
 
 ### Merging Multiple Logs :couple:
 
@@ -151,7 +149,7 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
                 save_every_k_ckpt=2)
 ```
 
-**Logging top-k checkpoints based on metric** :1st_place_medal:, :2nd_place_medal:, :3rd_place_medal:
+**Logging top-k checkpoints based on metric** :trident:
 
 ```python
 # Save top-3 checkpoints provided in log.update (stored in models/top_k)
@@ -166,12 +164,10 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
                 top_k_minimize_metric=True)
 ```
 
-## Development
+## Development & Milestones for Next Release
 
-You can run the test suite via `python -m pytest -vv tests/`. If you find a bug or are missing your favourite feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:
+You can run the test suite via `python -m pytest -vv tests/`. If you find a bug or are missing your favourite feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:. Here are some features I want to implement for the next release:
 
-
-## Milestones for Next Release
 - [ ] Add rich print table messages for updates + add verbosity
 - [ ] Add Weights and Biases Backend Support
 - [ ] Extend Tensorboard logging (for JAX/TF models)

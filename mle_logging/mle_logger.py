@@ -49,7 +49,7 @@ class MLELogger(object):
         use_tboard: bool = False,
         log_every_j_steps: Union[int, None] = None,
         print_every_k_updates: Union[int, None] = None,
-        model_type: str = "no-model-type-provided",
+        model_type: str = "no-model-type",
         ckpt_time_to_track: Union[str, None] = None,
         save_every_k_ckpt: Union[int, None] = None,
         save_top_k_ckpt: Union[int, None] = None,
@@ -124,19 +124,24 @@ class MLELogger(object):
             self.verbose = False
         else:
             self.verbose = len(self.what_to_print) > 0
-            print_welcome()
-            print_startup(
-                self.experiment_dir,
-                time_to_track,
-                what_to_track,
-                model_type,
-                seed_id,
-                ckpt_time_to_track,
-                save_every_k_ckpt,
-                save_top_k_ckpt,
-                top_k_metric_name,
-                top_k_minimize_metric,
-            )
+            if not reload:
+                print_welcome()
+                print_startup(
+                    self.experiment_dir,
+                    config_fname,
+                    time_to_track,
+                    what_to_track,
+                    model_type,
+                    seed_id,
+                    use_tboard,
+                    reload,
+                    print_every_k_updates,
+                    ckpt_time_to_track,
+                    save_every_k_ckpt,
+                    save_top_k_ckpt,
+                    top_k_metric_name,
+                    top_k_minimize_metric,
+                )
 
     def setup_experiment_dir(  # noqa: C901
         self,

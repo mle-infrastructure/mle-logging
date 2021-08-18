@@ -28,7 +28,7 @@ class ModelLog(object):
             "jax",
             "sklearn",
             "numpy",
-            "no-model-type-provided",
+            "no-model-type",
         ]
         self.model_type = model_type
         self.save_every_k_ckpt = save_every_k_ckpt
