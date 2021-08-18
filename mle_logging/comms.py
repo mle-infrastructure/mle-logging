@@ -52,6 +52,7 @@ def print_startup(
     time_to_track: list,
     what_to_track: list,
     model_type: str,
+    seed_id: str,
     ckpt_time_to_track: Union[str, None],
     save_every_k_ckpt: Union[int, None],
     save_top_k_ckpt: Union[int, None],
@@ -76,6 +77,7 @@ def print_startup(
         Panel(format_content("Time Tracked", time_to_print, "red"), expand=True),
         Panel(format_content("Stats Tracked", what_to_track, "blue"), expand=True),
         Panel(format_content("Models Tracked", model_type, "green"), expand=True),
+        Panel(format_content("Seed ID", seed_id, "orange"), expand=True),
     ]
     console.print(Columns(renderables))
 

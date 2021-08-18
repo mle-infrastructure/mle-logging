@@ -10,20 +10,27 @@ class MetaLog(object):
     time_vars: List[str]
     num_configs: int
 
-    def __init__(self, meta_log: DotMap):
+    def __init__(self, meta_log: DotMap, non_aggregated: bool = False):
         self.meta_log = meta_log
 
         # Return shallow log if there is only a single experiment stored
         self.num_configs = len(list(meta_log.keys()))
-        placeholder_run = list(meta_log.keys())[0]
+        ph_run = list(meta_log.keys())[0]
+
         # Extract different variable names from meta log
-        self.meta_vars = list(meta_log[placeholder_run].meta.keys())
-        self.stats_vars = list(meta_log[placeholder_run].stats.keys())
-        self.time_vars = list(meta_log[placeholder_run].time.keys())
+        if not non_aggregated:
+            self.meta_vars = list(meta_log[ph_run].meta.keys())
+            self.stats_vars = list(meta_log[ph_run].stats.keys())
+            self.time_vars = list(meta_log[ph_run].time.keys())
+        else:
+            ph_seed = list(meta_log[ph_run].keys())[0]
+            self.meta_vars = list(meta_log[ph_run][ph_seed].meta.keys())
+            self.stats_vars = list(meta_log[ph_run][ph_seed].stats.keys())
+            self.time_vars = list(meta_log[ph_run][ph_seed].time.keys())
 
         # Make log shallow if there is only a single experiment stored
         if self.num_configs == 1:
-            self.meta_log = self.meta_log[placeholder_run]
+            self.meta_log = self.meta_log[ph_run]
 
         # Make possible that all runs are accessible via attribute as in pd
         for key in self.meta_log:

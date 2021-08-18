@@ -54,7 +54,8 @@ def write_data_to_file(
     if file_id is None:
         groups = [i for i in groups if len(i) > 0]
     else:
-        groups = [i[0] + file_id + "_" + i[1:] for i in groups if len(i) > 0]
+        groups = [i[0] + file_id + "/" + i[1:] for i in groups if len(i) > 0]
+
     # sort groups based on depth
     idx = np.argsort(np.array([len(i.split("/")) for i in groups]))
     groups = [groups[i] for i in idx]
@@ -70,7 +71,7 @@ def write_data_to_file(
         if len(group) == 0:
             group = "/"
         if file_id is not None:
-            group_to_index = group[0] + file_id + "_" + group[1:]
+            group_to_index = group[0] + file_id + "/" + group[1:]
         else:
             group_to_index = group
         file_from.copy(path, file_to[group_to_index])

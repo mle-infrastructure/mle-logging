@@ -11,8 +11,7 @@ def merge_seed_logs(
     delete_files: bool = True,
 ) -> None:
     """Merge all .hdf5 files for different seeds into single log."""
-    # Collect paths in log dir until the correct number is found
-    # Only if num_logs is not None
+    # Collect paths in log dir until the num_logs is found
     log_dir = os.path.join(experiment_dir, "logs")
     while True:
         log_paths = [os.path.join(log_dir, log) for log in os.listdir(log_dir)]

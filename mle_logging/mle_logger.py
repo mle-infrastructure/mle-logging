@@ -44,7 +44,7 @@ class MLELogger(object):
         what_to_print: Union[List[str], None] = None,
         config_fname: Union[str, None] = None,
         experiment_dir: str = "/",
-        seed_id: str = "no_seed_provided",
+        seed_id: Union[str, int] = "no_seed_provided",
         overwrite_experiment_dir: bool = False,
         use_tboard: bool = False,
         log_every_j_steps: Union[int, None] = None,
@@ -63,7 +63,7 @@ class MLELogger(object):
         self.print_every_k_updates = print_every_k_updates
         self.timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
         self.log_save_counter = 0
-        self.seed_id = seed_id
+        self.seed_id = "seed_" + str(seed_id) if type(seed_id) == int else seed_id
 
         # Set up the logging directories - copy timestamped config file
         self.setup_experiment_dir(
@@ -73,7 +73,6 @@ class MLELogger(object):
             overwrite_experiment_dir,
             reload,
         )
-        self.log_save_fname = self.experiment_dir + "logs/" + "log_" + seed_id + ".hdf5"
         os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
 
         # STATS & TENSORBOARD LOGGING SETUP
@@ -131,6 +130,7 @@ class MLELogger(object):
                 time_to_track,
                 what_to_track,
                 model_type,
+                seed_id,
                 ckpt_time_to_track,
                 save_every_k_ckpt,
                 save_top_k_ckpt,
@@ -164,10 +164,15 @@ class MLELogger(object):
             self.base_str = ""
             self.experiment_dir = base_exp_dir
 
+        self.log_save_fname = self.experiment_dir + "logs/" + "log_" + seed_id + ".hdf5"
+
         # Delete old experiment logging directory
         if overwrite_experiment_dir and not reload:
-            if os.path.exists(self.experiment_dir):
-                shutil.rmtree(self.experiment_dir)
+            if os.path.exists(self.log_save_fname):
+                os.remove(self.log_save_fname)
+            if self.use_tboard:
+                if os.path.exists(self.experiment_dir + "tboards/"):
+                    shutil.rmtree(self.experiment_dir + "tboards/")
 
         # Create a new empty directory for the experiment (if not existing)
         os.makedirs(self.experiment_dir, exist_ok=True)

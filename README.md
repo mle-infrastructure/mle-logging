@@ -54,20 +54,6 @@ log.update(time_tic, stats_tic, model, fig, extra, save=True)
 
 ### File Structure & Re-Loading :books:
 
-For visualization and post-processing load the results via
-```python
-from mle_logging import load_log
-log_out = load_log("experiment_dir/")
-
-# The results can be accessed via meta, stats and time keys
-# >>> log_out.meta.keys()
-# odict_keys(['experiment_dir', 'extra_storage_paths', 'fig_storage_paths', 'log_paths', 'model_ckpt', 'model_type'])
-# >>> log_out.stats.keys()
-# odict_keys(['test_loss', 'train_loss'])
-# >>> log_out.time.keys()
-# odict_keys(['num_epochs', 'num_updates', 'time_elapsed'])
-```
-
 The `MLELogger` will create a nested directory, which looks as follows:
 
 ```
@@ -83,6 +69,29 @@ experiment_dir
 ├── <config_name>.json: Copy of configuration file (if provided)
 ```
 
+For visualization and post-processing load the results via
+```python
+from mle_logging import load_log
+log_out = load_log("experiment_dir/")
+
+# The results can be accessed via meta, stats and time keys
+# >>> log_out.meta.keys()
+# odict_keys(['experiment_dir', 'extra_storage_paths', 'fig_storage_paths', 'log_paths', 'model_ckpt', 'model_type'])
+# >>> log_out.stats.keys()
+# odict_keys(['test_loss', 'train_loss'])
+# >>> log_out.time.keys()
+# odict_keys(['num_epochs', 'num_updates', 'time_elapsed'])
+```
+
+If an experiment is aborted, you can reload and continue the previous run via the `reload=True` option:
+
+```python
+log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
+                what_to_track=['train_loss', 'test_loss'],
+                experiment_dir="experiment_dir/",
+                model_type='torch',
+                reload=True)
+```
 
 ## Installation :memo:
 
@@ -159,15 +168,13 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
 
 ## Development
 
-If you find a bug or are missing your favourite feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:
+You can run the test suite via `python -m pytest -vv tests/`. If you find a bug or are missing your favourite feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:
 
 
 ## Milestones for Next Release
-- [ ] No mean/stats for time variables when aggregating multiple seeds
-- [ ] Fix so that multi-config/seed indexing works via `meta_log.config_1.seed_1.stats`
 - [ ] Add rich print table messages for updates + add verbosity
-- [ ] Add transformations of time series statistics
+- [ ] Add Weights and Biases Backend Support
+- [ ] Extend Tensorboard logging (for JAX/TF models)
+- [ ] Add different transformations of time series statistics
     - [ ] Running means
     - [ ] Smoothing of different degrees
-- [ ] Extend Tensorboard logging (for JAX/TF models)
-- [ ] Add Weights and Biases Backend Support

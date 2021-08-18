@@ -118,7 +118,7 @@ def test_load_single():
 def test_merge_load_seeds():
     """Test merging of multiple seeds and loading."""
     if os.path.exists(log_config1_seed1["experiment_dir"]) and os.path.isdir(
-        log_config["experiment_dir"]
+        log_config1_seed1["experiment_dir"]
     ):
         shutil.rmtree(log_config1_seed1["experiment_dir"])
 
@@ -155,7 +155,7 @@ def test_merge_load_seeds():
 def test_merge_load_configs():
     """Test merging of multiple configs and loading."""
     if os.path.exists(log_config1_seed1["experiment_dir"]) and os.path.isdir(
-        log_config["experiment_dir"]
+        log_config1_seed1["experiment_dir"]
     ):
         shutil.rmtree(log_config1_seed1["experiment_dir"])
 
@@ -178,6 +178,7 @@ def test_merge_load_configs():
 
     # Aggregate the different merged configuration .hdf5 files into single meta log
     eval_ids = ["config_1", "config_2"]
+    seed_ids = ["seed_1", "seed_2"]
     merge_config_logs(experiment_dir = f"{log_config1_seed1['experiment_dir']}",
                       all_run_ids = eval_ids)
     meta_path = f"{log_config1_seed1['experiment_dir']}/meta_log.hdf5"
@@ -191,9 +192,9 @@ def test_merge_load_configs():
             == collections.Counter(aggreg_keys))
 
     meta_log = load_meta_log(meta_path, aggregate_seeds=False)
-    eval_ids = ['config_1_seed_1', 'config_1_seed_2',
-                'config_2_seed_1', 'config_2_seed_2']
     assert (collections.Counter(meta_log.eval_ids)
             == collections.Counter(eval_ids))
+    assert (collections.Counter(meta_log.config_1.keys())
+            == collections.Counter(seed_ids))
     # Finally -- clean up
     shutil.rmtree(log_config1_seed1["experiment_dir"])
