@@ -1,14 +1,14 @@
-# A Lightweight Logger for ML Experiments :book:
+# A Lightweight Logger for ML Experiments 📖
 [![Pyversions](https://img.shields.io/pypi/pyversions/mle-logging.svg?style=flat-square)](https://pypi.python.org/pypi/mle-logging)
 [![PyPI version](https://badge.fury.io/py/mle-logging.svg)](https://badge.fury.io/py/mle-logging)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb)
 
-Simple logging of statistics, model checkpoints, plots and other objects for your Machine Learning Experiments (MLE). Furthermore, the `MLELogger` comes with smooth multi-seed result aggregation and combination of multi-configuration runs. For a quickstart checkout the [notebook blog](https://github.com/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb) :rocket:
+Simple logging of statistics, model checkpoints, plots and other objects for your Machine Learning Experiments (MLE). Furthermore, the `MLELogger` comes with smooth multi-seed result aggregation and combination of multi-configuration runs. For a quickstart checkout the [notebook blog](https://github.com/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb) 🚀
 
 ![](https://github.com/RobertTLange/mle-logging/blob/main/docs/mle_logger_structure.png?raw=true)
 
-## The API :video_game:
+## The API 🎮
 
 ```python
 from mle_logging import MLELogger
@@ -50,7 +50,7 @@ Or do everything in a single line...
 log.update(time_tic, stats_tic, model, fig, extra, save=True)
 ```
 
-### File Structure & Re-Loading :books:
+### File Structure & Re-Loading 📚
 
 The `MLELogger` will create a nested directory, which looks as follows:
 
@@ -91,7 +91,7 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
                 reload=True)
 ```
 
-## Installation :pencil:
+## Installation ⏳
 
 A PyPI installation is available via:
 
@@ -108,11 +108,11 @@ pip install -e .
 ```
 
 
-## Advanced Options :bicyclist:
+## Advanced Options 🚴
 
-### Merging Multiple Logs :couple:
+### Merging Multiple Logs 👫
 
-**Merging Multiple Random Seeds** :seedling: + :seedling:
+**Merging Multiple Random Seeds** 🌱 + 🌱
 
 ```python
 from mle_logging import merge_seed_logs
@@ -122,7 +122,7 @@ log_out = load_log("experiment_dir/")
 # ['seed_1', 'seed_2']
 ```
 
-**Merging Multiple Configurations** :bookmark: + :bookmark:
+**Merging Multiple Configurations** 🔖 + 🔖
 
 ```python
 from mle_logging import merge_config_logs, load_meta_log
@@ -135,9 +135,9 @@ meta_log = load_meta_log("multi_config_dir/meta_log.hdf5")
 # odict_keys(['mean', 'std', 'p50', 'p10', 'p25', 'p75', 'p90']))
 ```
 
-### Storing Checkpoint Portfolios :file_cabinet:
+### Storing Checkpoint Portfolios 📂
 
-**Logging every k-th checkpoint update** :exclamation: :arrow_right: ... :arrow_right: :exclamation:
+**Logging every k-th checkpoint update** ❗ ⏩ ... ⏩ ❗
 
 ```python
 # Save every second checkpoint provided in log.update (stored in models/every_k)
@@ -149,7 +149,7 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
                 save_every_k_ckpt=2)
 ```
 
-**Logging top-k checkpoints based on metric** :trident:
+**Logging top-k checkpoints based on metric** 🔱
 
 ```python
 # Save top-3 checkpoints provided in log.update (stored in models/top_k)
@@ -167,10 +167,6 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
 ## Development & Milestones for Next Release
 
 You can run the test suite via `python -m pytest -vv tests/`. If you find a bug or are missing your favourite feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:. Here are some features I want to implement for the next release:
-
-- [ ] Add rich print table messages for updates + add verbosity
-- [ ] Add Weights and Biases Backend Support
-- [ ] Extend Tensorboard logging (for JAX/TF models)
-- [ ] Add different transformations of time series statistics
-    - [ ] Running means
-    - [ ] Smoothing of different degrees
+- Add a progress bar if total number of updates specified
+- Add Weights and Biases Backend Support
+- Extend Tensorboard logging (for JAX/TF models)

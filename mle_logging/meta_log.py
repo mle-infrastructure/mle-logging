@@ -1,5 +1,6 @@
 from dotmap import DotMap
 from typing import Union, List
+from .utils import visualize_1D_lcurves
 
 
 class MetaLog(object):
@@ -16,7 +17,6 @@ class MetaLog(object):
         # Return shallow log if there is only a single experiment stored
         self.num_configs = len(list(meta_log.keys()))
         ph_run = list(meta_log.keys())[0]
-
         # Extract different variable names from meta log
         if not non_aggregated:
             self.meta_vars = list(meta_log[ph_run].meta.keys())
@@ -49,21 +49,11 @@ class MetaLog(object):
         ax=None,
     ) -> None:
         """Plot all runs in meta-log for variable 'target_to_plot'."""
-        try:
-            from mle_toolbox.visualize import visualize_1D_lcurves
-        except ModuleNotFoundError as err:
-            raise ModuleNotFoundError(
-                f"{err}. You need to"
-                "install `mle-toolbox` to use "
-                "the plotting utilities."
-            )
-
         if iter_to_plot is None:
             iter_to_plot = self.time_vars[0]
-        assert target_to_plot in self.stats_vars
         assert iter_to_plot in self.time_vars
-        visualize_1D_lcurves(
-            self,
+        fig, ax = visualize_1D_lcurves(
+            self.meta_log,
             iter_to_plot,
             target_to_plot,
             smooth_window=1,
@@ -71,9 +61,11 @@ class MetaLog(object):
             num_legend_cols=2,
             plot_title=target_to_plot,
             xy_labels=[iter_to_plot, target_to_plot],
+            run_ids=self.eval_ids,
             fig=fig,
             ax=ax,
         )
+        return fig, ax
 
     @property
     def eval_ids(self) -> Union[int, None]:

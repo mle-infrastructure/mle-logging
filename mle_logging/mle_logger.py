@@ -16,8 +16,8 @@ class MLELogger(object):
         ======= TRACKING AND PRINTING VARIABLE NAMES
         time_to_track (List[str]): column names of pandas df - time
         what_to_track (List[str]): column names of pandas df - statistics
-        time_to_print (List[str]): columns of time df to print out
-        what_to_print (List[str]): columns of stats df to print out
+        time_to_print (List[str]): subset columns of time df to print out
+        what_to_print (List[str]): subset columns of stats df to print out
         ======= TRACKING AND PRINTING VARIABLE NAMES
         config_fname (str): file path of configuration of experiment
         experiment_dir (str): base experiment directory
@@ -56,6 +56,7 @@ class MLELogger(object):
         top_k_metric_name: Union[str, None] = None,
         top_k_minimize_metric: Union[bool, None] = None,
         reload: bool = False,
+        verbose: bool = False
     ):
         # Set up tensorboard when/where to log and when to print
         self.use_tboard = use_tboard
@@ -114,34 +115,35 @@ class MLELogger(object):
         )
 
         # VERBOSITY SETUP: Set up what to print
-        if time_to_print is not None:
+        self.verbose = verbose
+        self.print_counter = 0
+        if time_to_print is None:
+            self.time_to_print = ["time"] + time_to_track
+        else:
             self.time_to_print = ["time"] + time_to_print
+        if what_to_print is None:
+            self.what_to_print = what_to_track
         else:
-            self.time_to_print = []
-        self.what_to_print = what_to_print
+            self.what_to_print = what_to_print
 
-        if self.what_to_print is None:
-            self.verbose = False
-        else:
-            self.verbose = len(self.what_to_print) > 0
-            if not reload:
-                print_welcome()
-                print_startup(
-                    self.experiment_dir,
-                    config_fname,
-                    time_to_track,
-                    what_to_track,
-                    model_type,
-                    seed_id,
-                    use_tboard,
-                    reload,
-                    print_every_k_updates,
-                    ckpt_time_to_track,
-                    save_every_k_ckpt,
-                    save_top_k_ckpt,
-                    top_k_metric_name,
-                    top_k_minimize_metric,
-                )
+        if not reload and verbose:
+            print_welcome()
+            print_startup(
+                self.experiment_dir,
+                config_fname,
+                time_to_track,
+                what_to_track,
+                model_type,
+                seed_id,
+                use_tboard,
+                reload,
+                print_every_k_updates,
+                ckpt_time_to_track,
+                save_every_k_ckpt,
+                save_top_k_ckpt,
+                top_k_metric_name,
+                top_k_minimize_metric,
+            )
 
     def setup_experiment_dir(  # noqa: C901
         self,
@@ -169,21 +171,23 @@ class MLELogger(object):
             self.base_str = ""
             self.experiment_dir = base_exp_dir
 
-        self.log_save_fname = self.experiment_dir + "logs/" + "log_" + seed_id + ".hdf5"
+        self.log_save_fname = os.path.join(self.experiment_dir,
+                                           "logs/", "log_" + seed_id + ".hdf5")
 
         # Delete old experiment logging directory
         if overwrite_experiment_dir and not reload:
             if os.path.exists(self.log_save_fname):
                 os.remove(self.log_save_fname)
             if self.use_tboard:
-                if os.path.exists(self.experiment_dir + "tboards/"):
-                    shutil.rmtree(self.experiment_dir + "tboards/")
+                if os.path.exists(os.path.join(self.experiment_dir, "tboards/")):
+                    shutil.rmtree(os.path.join(self.experiment_dir, "tboards/"))
 
         # Create a new empty directory for the experiment (if not existing)
         os.makedirs(self.experiment_dir, exist_ok=True)
 
         # Copy over json configuration file if it exists
-        config_copy = self.experiment_dir + self.timestr + self.base_str + ".json"
+        config_copy = os.path.join(self.experiment_dir,
+                                   self.timestr + self.base_str + ".json")
         if not os.path.exists(config_copy) and config_fname is not None:
             shutil.copy(config_fname, config_copy)
             self.config_copy = config_copy
@@ -223,7 +227,10 @@ class MLELogger(object):
         # Print the most current results
         if self.verbose and self.print_every_k_updates is not None:
             if self.stats_log.stats_update_counter % self.print_every_k_updates == 0:
-                print_update(self.time_to_print, self.what_to_print, c_tick, s_tick)
+                # Only print column name header at 1st print!
+                print_update(self.time_to_print, self.what_to_print,
+                             c_tick, s_tick, self.print_counter == 0)
+                self.print_counter += 1
 
     def save_model(self, model):
         """Save a model checkpoint."""

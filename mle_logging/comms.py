@@ -46,7 +46,7 @@ def print_welcome() -> None:
         welcome_ascii[5],
         "  [link=https://github.com/RobertTLange/mle-logging/]MLE-Log Repo[/link] [not italic]:pencil:[/]",  # noqa: E501
     )
-    panel = Panel(grid, style="white on red", expand=True)
+    panel = Panel(grid, style="white on blue", expand=True)
     Console().print(panel)
 
 
@@ -67,8 +67,6 @@ def print_startup(
     top_k_minimize_metric: Union[bool, None],
 ):
     """Rich print statement at logger startup."""
-    console = Console()
-
     grid = Table.grid(expand=True)
     grid.add_column(justify="left")
     grid.add_column(justify="left")
@@ -110,11 +108,11 @@ def print_startup(
     Console().print(panel)
 
 
-def print_update(time_to_print, what_to_print, c_tick, s_tick):
+def print_update(time_to_print, what_to_print, c_tick, s_tick, print_header):
     """Rich print statement for logger update."""
     console = Console()
     table = Table(
-        show_header=True,
+        show_header=print_header,
         row_styles=["none"],
         border_style="white",
         box=box.SIMPLE,
