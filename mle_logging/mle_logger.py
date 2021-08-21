@@ -45,7 +45,7 @@ class MLELogger(object):
         config_fname: Union[str, None] = None,
         experiment_dir: str = "/",
         seed_id: Union[str, int] = "no_seed_provided",
-        overwrite_experiment_dir: bool = False,
+        overwrite: bool = False,
         use_tboard: bool = False,
         log_every_j_steps: Union[int, None] = None,
         print_every_k_updates: Union[int, None] = None,
@@ -56,7 +56,7 @@ class MLELogger(object):
         top_k_metric_name: Union[str, None] = None,
         top_k_minimize_metric: Union[bool, None] = None,
         reload: bool = False,
-        verbose: bool = False
+        verbose: bool = False,
     ):
         # Set up tensorboard when/where to log and when to print
         self.use_tboard = use_tboard
@@ -71,7 +71,7 @@ class MLELogger(object):
             experiment_dir,
             config_fname,
             self.seed_id,
-            overwrite_experiment_dir,
+            overwrite,
             reload,
         )
         os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
@@ -171,8 +171,9 @@ class MLELogger(object):
             self.base_str = ""
             self.experiment_dir = base_exp_dir
 
-        self.log_save_fname = os.path.join(self.experiment_dir,
-                                           "logs/", "log_" + seed_id + ".hdf5")
+        self.log_save_fname = os.path.join(
+            self.experiment_dir, "logs/", "log_" + seed_id + ".hdf5"
+        )
 
         # Delete old experiment logging directory
         if overwrite_experiment_dir and not reload:
@@ -186,8 +187,9 @@ class MLELogger(object):
         os.makedirs(self.experiment_dir, exist_ok=True)
 
         # Copy over json configuration file if it exists
-        config_copy = os.path.join(self.experiment_dir,
-                                   self.timestr + self.base_str + ".json")
+        config_copy = os.path.join(
+            self.experiment_dir, self.timestr + self.base_str + ".json"
+        )
         if not os.path.exists(config_copy) and config_fname is not None:
             shutil.copy(config_fname, config_copy)
             self.config_copy = config_copy
@@ -228,8 +230,13 @@ class MLELogger(object):
         if self.verbose and self.print_every_k_updates is not None:
             if self.stats_log.stats_update_counter % self.print_every_k_updates == 0:
                 # Only print column name header at 1st print!
-                print_update(self.time_to_print, self.what_to_print,
-                             c_tick, s_tick, self.print_counter == 0)
+                print_update(
+                    self.time_to_print,
+                    self.what_to_print,
+                    c_tick,
+                    s_tick,
+                    self.print_counter == 0,
+                )
                 self.print_counter += 1
 
     def save_model(self, model):

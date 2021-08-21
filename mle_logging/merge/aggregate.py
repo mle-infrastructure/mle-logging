@@ -3,7 +3,7 @@ import numpy as np
 from typing import List, Tuple, Any
 
 
-def aggregate_over_seeds(result_dict: DotMap, batch_case: bool=False) -> DotMap:
+def aggregate_over_seeds(result_dict: DotMap, batch_case: bool = False) -> DotMap:
     """Mean all individual runs over their respective seeds.
     BATCH EVAL CASE:
     IN: {'b_1_eval_0': {'seed_0': {'meta': {}, 'stats': {}, 'time': {}}

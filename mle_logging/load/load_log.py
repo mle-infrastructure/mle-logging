@@ -14,7 +14,7 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
     run_names = list(h5f.keys())
     # Get all main data source keys (single vs multi-seed)
     data_sources = list(h5f[run_names[0]].keys())
-    data_types = ['meta', 'stats', 'time']
+    data_types = ["meta", "stats", "time"]
 
     """
     3 Possible Cases:
@@ -22,15 +22,15 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
     2. Single config - multi seed = aggregation - seed_id -> meta, stats, time
     3. Multi config - multi seed = aggregation - config_id -> seed_id -> ...
     """
-    case_1 = (len(run_names) == 1 and
-              collections.Counter(h5f[run_names[0]].keys())
-              == collections.Counter(data_types))
-    case_2 = (len(run_names) > 1 and
-              collections.Counter(h5f[run_names[0]].keys())
-              == collections.Counter(data_types))
-    case_3 = (len(run_names) > 1 and
-              collections.Counter(h5f[run_names[0]].keys())
-              != collections.Counter(data_types))
+    case_1 = len(run_names) == 1 and collections.Counter(
+        h5f[run_names[0]].keys()
+    ) == collections.Counter(data_types)
+    case_2 = len(run_names) > 1 and collections.Counter(
+        h5f[run_names[0]].keys()
+    ) == collections.Counter(data_types)
+    case_3 = len(run_names) > 1 and collections.Counter(
+        h5f[run_names[0]].keys()
+    ) != collections.Counter(data_types)
 
     result_dict = {key: {} for key in run_names}
     # Shallow versus deep aggregation
@@ -50,7 +50,9 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
             result_dict[rn] = source_to_store
     else:
         data_items = {
-            data_types[i]: list(h5f[run_names[0]][data_sources[0]][data_types[i]].keys())
+            data_types[i]: list(
+                h5f[run_names[0]][data_sources[0]][data_types[i]].keys()
+            )
             for i in range(len(data_types))
         }
         for rn in run_names:
@@ -69,9 +71,12 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
     if aggregate_seeds and (case_2 or case_3):
         # Important aggregation helper & compute mean/median/10p/50p/etc.
         from ..merge.aggregate import aggregate_over_seeds
+
         result_dict = aggregate_over_seeds(result_dict, batch_case=case_3)
-    return MetaLog(DotMap(result_dict, _dynamic=False),
-                   non_aggregated=(not aggregate_seeds and case_3))
+    return MetaLog(
+        DotMap(result_dict, _dynamic=False),
+        non_aggregated=(not aggregate_seeds and case_3),
+    )
 
 
 def load_log(experiment_dir: str, aggregate_seeds: bool = False) -> MetaLog:

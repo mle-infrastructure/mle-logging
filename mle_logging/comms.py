@@ -25,10 +25,7 @@ def print_welcome() -> None:
         welcome_ascii[1],
         datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"),
     )
-    grid.add_row(
-        welcome_ascii[2],
-        f"Logger v{__version__} :lock_with_ink_pen:"
-    )
+    grid.add_row(welcome_ascii[2], f"Logger v{__version__} :lock_with_ink_pen:")
     # grid.add_row(
     #     welcome_ascii[3],
     #     "  [link=https://live.staticflickr.com/2061/2306127707_2607857c2d_z.jpg]U r awesome![/link] :hugging_face:",  # noqa: E501
@@ -76,7 +73,7 @@ def print_startup(
             base = f"[b]{title}[/b]: "
             for i, v in enumerate(value):
                 base += f"{v}"
-                if i < len(value)-1:
+                if i < len(value) - 1:
                     base += ", "
             return base
         else:
@@ -87,15 +84,26 @@ def print_startup(
         Panel(format_content(":book: Log Dir", experiment_dir), expand=True),
         Panel(format_content(":page_facing_up: Config", config_fname), expand=True),
         Panel(format_content(":watch: Time", time_to_print), expand=True),
-        Panel(format_content(":chart_with_downwards_trend: Stats", what_to_track), expand=True),
+        Panel(
+            format_content(":chart_with_downwards_trend: Stats", what_to_track),
+            expand=True,
+        ),
         Panel(format_content(":seedling: Seed ID", seed_id), expand=True),
-        Panel(format_content(":chart_with_upwards_trend: Tensorboard", use_tboard), expand=True),
+        Panel(
+            format_content(":chart_with_upwards_trend: Tensorboard", use_tboard),
+            expand=True,
+        ),
         Panel(format_content(":rocket: Model", model_type), expand=True),
         Panel(format_content("Tracked ckpt Time", ckpt_time_to_track), expand=True),
-        Panel(format_content(":clock1130: Every k-th ckpt", save_every_k_ckpt), expand=True),
+        Panel(
+            format_content(":clock1130: Every k-th ckpt", save_every_k_ckpt),
+            expand=True,
+        ),
         Panel(format_content(":trident: Top k ckpt", save_top_k_ckpt), expand=True),
         Panel(format_content("Top k-th metric", top_k_metric_name), expand=True),
-        Panel(format_content("Top k-th minimization", top_k_minimize_metric), expand=True),
+        Panel(
+            format_content("Top k-th minimization", top_k_minimize_metric), expand=True
+        ),
     ]
 
     grid.add_row(renderables[0], renderables[1])

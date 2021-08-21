@@ -74,8 +74,8 @@ def visualize_1D_lcurves(
     iter_to_plot: str = "num_episodes",
     target_to_plot: Union[List[str], str] = "ep_reward",
     smooth_window: int = 1,
-    plot_title: str = "Temp Title",
-    xy_labels: list = [r"# Train Iter", r"Temp Y-Label"],
+    plot_title: Union[str, None] = None,
+    xy_labels: Union[list, None] = None,
     base_label: str = "{}",
     curve_labels: list = [],
     every_nth_tick: Union[int, None] = None,
@@ -107,8 +107,9 @@ def visualize_1D_lcurves(
         run_ids.sort(key=tokenize)
 
     # Plot all curves if not subselected
-    single_level = (collections.Counter(log_to_plot[run_ids[0]].keys())
-                    == collections.Counter(["stats", "time", "meta"]))
+    single_level = collections.Counter(
+        log_to_plot[run_ids[0]].keys()
+    ) == collections.Counter(["stats", "time", "meta"])
 
     # If single seed/aggregated - add placeholder key seed_id
     if single_level:
@@ -134,10 +135,9 @@ def visualize_1D_lcurves(
 
     if rgb_tuples is None:
         # Default colormap is blue to red diverging seaborn palette
-        color_by = sns.diverging_palette(240, 10, sep=1,
-                                         n=len(run_ids) *
-                                         len(seed_ids) *
-                                         len(target_to_plot))
+        color_by = sns.diverging_palette(
+            240, 10, sep=1, n=len(run_ids) * len(seed_ids) * len(target_to_plot)
+        )
         # color_by = sns.light_palette("navy", len(run_ids), reverse=False)
     else:
         color_by = rgb_tuples
@@ -157,8 +157,10 @@ def visualize_1D_lcurves(
             seed_id = seed_ids[j]
             for target in target_to_plot:
                 label = curve_labels[plot_counter]
-                if (type(log_to_plot[run_id][seed_id].stats[target]) == dict or
-                   type(log_to_plot[run_id][seed_id].stats[target]) == DotMap):
+                if (
+                    type(log_to_plot[run_id][seed_id].stats[target]) == dict
+                    or type(log_to_plot[run_id][seed_id].stats[target]) == DotMap
+                ):
                     plot_mean = True
                     mean_to_plot = log_to_plot[run_id][seed_id].stats[target]["mean"]
                     std_to_plot = log_to_plot[run_id][seed_id].stats[target]["std"]
@@ -206,7 +208,12 @@ def visualize_1D_lcurves(
     # ax.set_ylim(0, 0.35)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+
+    if plot_title is None:
+        plot_title = ", ".join(target_to_plot)
     ax.set_title(plot_title)
+    if xy_labels is None:
+        xy_labels = [iter_to_plot, ", ".join(target_to_plot)]
     ax.set_xlabel(xy_labels[0])
     ax.set_ylabel(xy_labels[1])
     fig.tight_layout()

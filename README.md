@@ -78,7 +78,7 @@ log_out = load_log("experiment_dir/")
 # >>> log_out.stats.keys()
 # odict_keys(['test_loss', 'train_loss'])
 # >>> log_out.time.keys()
-# odict_keys(['num_epochs', 'num_updates', 'time_elapsed'])
+# odict_keys(['time', 'num_epochs', 'num_updates', 'time_elapsed'])
 ```
 
 If an experiment was aborted, you can reload and continue the previous run via the `reload=True` option:
@@ -135,6 +135,14 @@ meta_log = load_meta_log("multi_config_dir/meta_log.hdf5")
 # odict_keys(['mean', 'std', 'p50', 'p10', 'p25', 'p75', 'p90']))
 ```
 
+
+### Plotting of Logs 🧑‍🎨
+
+```python
+meta_log = load_meta_log("multi_config_dir/meta_log.hdf5")
+meta_log.plot("train_loss", "num_updates")
+```
+
 ### Storing Checkpoint Portfolios 📂
 
 **Logging every k-th checkpoint update** ❗ ⏩ ... ⏩ ❗
@@ -167,6 +175,6 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
 ## Development & Milestones for Next Release
 
 You can run the test suite via `python -m pytest -vv tests/`. If you find a bug or are missing your favourite feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:. Here are some features I want to implement for the next release:
-- Add a progress bar if total number of updates specified
+- Add a progress bar if total number of updates is specified
 - Add Weights and Biases Backend Support
 - Extend Tensorboard logging (for JAX/TF models)

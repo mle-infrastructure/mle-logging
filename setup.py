@@ -28,7 +28,7 @@ if mo:
     verstr = mo.group(1)
 else:
     raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
-git_tar = "https://github.com/RobertTLange/mle-logging/archive/v0.0.1.tar.gz"
+git_tar = f"https://github.com/RobertTLange/mle-logging/archive/v{verstr}.tar.gz"
 
 
 setup(

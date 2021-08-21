@@ -59,8 +59,6 @@ class MetaLog(object):
             smooth_window=1,
             every_nth_tick=None,
             num_legend_cols=2,
-            plot_title=target_to_plot,
-            xy_labels=[iter_to_plot, target_to_plot],
             run_ids=self.eval_ids,
             fig=fig,
             ax=ax,
