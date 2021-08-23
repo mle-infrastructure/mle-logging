@@ -27,7 +27,7 @@ def run():
                     seed_id=1,
                     verbose=True)
     log.update({'num_updates': 10, 'num_epochs': 1},
-               {'train_loss': 0.1234, 'test_loss': 0.1345},
+               {'train_loss': 0.1234, 'test_loss': 0.1235},
                model, fig, extra, save=False)
 
 
