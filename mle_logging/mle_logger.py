@@ -4,7 +4,11 @@ import shutil
 import datetime
 from typing import Union, List, Dict
 from .utils import write_to_hdf5
-from .comms import print_welcome, print_startup, print_update
+from .comms import (print_welcome,
+                    print_startup,
+                    print_update,
+                    print_reload,
+                    print_storage)
 from .save import StatsLog, TboardLog, ModelLog, FigureLog, ExtraLog
 
 
@@ -48,7 +52,7 @@ class MLELogger(object):
         overwrite: bool = False,
         use_tboard: bool = False,
         log_every_j_steps: Union[int, None] = None,
-        print_every_k_updates: Union[int, None] = None,
+        print_every_k_updates: Union[int, None] = 1,
         model_type: str = "no-model-type",
         ckpt_time_to_track: Union[str, None] = None,
         save_every_k_ckpt: Union[int, None] = None,
@@ -144,6 +148,8 @@ class MLELogger(object):
                 top_k_metric_name,
                 top_k_minimize_metric,
             )
+        elif reload and verbose:
+            print_reload(self.experiment_dir,)
 
     def setup_experiment_dir(  # noqa: C901
         self,
@@ -236,6 +242,20 @@ class MLELogger(object):
                     c_tick,
                     s_tick,
                     self.print_counter == 0,
+                )
+                print_storage(
+                    fig_path=(self.figure_log.fig_storage_paths[-1]
+                              if plot_fig is not None else None),
+                    extra_path=(self.extra_log.extra_storage_paths[-1]
+                                if extra_obj is not None else None),
+                    final_model_path=(self.model_log.final_model_save_fname
+                                      if model is not None else None),
+                    every_k_model_path=(self.model_log.every_k_ckpt_list[-1]
+                                        if model is not None and
+                                        self.model_log.stored_every_k else None),
+                    top_k_model_path=(self.model_log.top_k_ckpt_list[-1]
+                                      if model is not None and
+                                      self.model_log.stored_top_k else None),
                 )
                 self.print_counter += 1
 

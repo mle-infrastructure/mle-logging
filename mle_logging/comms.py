@@ -9,6 +9,9 @@ import datetime
 from ._version import __version__
 
 
+console_width = 80
+
+
 def print_welcome() -> None:
     """Display header with clock and general toolbox configurations."""
     welcome_ascii = r"""
@@ -19,7 +22,7 @@ def print_welcome() -> None:
   \/_/  \/_/\/_____/\/_____/\/_____/\/_____/\/_____/
     """.splitlines()
     grid = Table.grid(expand=True)
-    grid.add_column(justify="center")
+    grid.add_column(justify="left")
     grid.add_column(justify="right")
     grid.add_row(
         welcome_ascii[1],
@@ -44,7 +47,7 @@ def print_welcome() -> None:
         "  [link=https://github.com/RobertTLange/mle-logging/]MLE-Log Repo[/link] [not italic]:pencil:[/]",  # noqa: E501
     )
     panel = Panel(grid, style="white on blue", expand=True)
-    Console().print(panel)
+    Console(width=console_width).print(panel)
 
 
 def print_startup(
@@ -109,16 +112,19 @@ def print_startup(
     grid.add_row(renderables[0], renderables[1])
     grid.add_row(renderables[2], renderables[3])
     grid.add_row(renderables[4], renderables[6])
-    grid.add_row(renderables[8], renderables[9])
-    # grid.add_row(renderables[8], renderables[9])
+    if save_every_k_ckpt is None and save_top_k_ckpt is not None:
+        grid.add_row(renderables[8],)
+    elif save_every_k_ckpt is not None and save_top_k_ckpt is None:
+        grid.add_row(renderables[9],)
+    elif save_every_k_ckpt is not None and save_top_k_ckpt is not None:
+        grid.add_row(renderables[8], renderables[9])
     # grid.add_row(renderables[10], renderables[11])
     panel = Panel(grid, expand=True)
-    Console().print(panel)
+    Console(width=console_width).print(panel)
 
 
 def print_update(time_to_print, what_to_print, c_tick, s_tick, print_header):
     """Rich print statement for logger update."""
-    console = Console()
     table = Table(
         show_header=print_header,
         row_styles=["none"],
@@ -145,14 +151,12 @@ def print_update(time_to_print, what_to_print, c_tick, s_tick, print_header):
         if i == 0:
             table.add_column(
                 ":chart_with_downwards_trend: [blue]" + c_label + "[/blue]",
-                style="blue",
                 width=14,
                 justify="center",
             )
         else:
             table.add_column(
                 "[blue]" + c_label + "[/blue]",
-                style="blue",
                 width=12,
                 justify="center",
             )
@@ -161,7 +165,68 @@ def print_update(time_to_print, what_to_print, c_tick, s_tick, print_header):
     ).values.tolist()[0]
     row_str_list = [str(v) for v in row_list]
     table.add_row(*row_str_list)
-    console.print(table, justify="center")
+
+    # Print statistics update
+    Console(width=console_width).print(table, justify="center")
+
+
+def print_reload(experiment_dir: str):
+    """Rich print statement for logger reloading."""
+    Console().log(f"Reloaded log from {experiment_dir}")
+
+
+def print_storage(fig_path: Union[str, None] = None,
+                  extra_path: Union[str, None] = None,
+                  final_model_path: Union[str, None] = None,
+                  every_k_model_path: Union[str, None] = None,
+                  top_k_model_path: Union[str, None] = None):
+    """Rich print statement for object saving log."""
+    table = Table(
+        show_header=False,
+        row_styles=["none"],
+        border_style="white",
+        box=box.SIMPLE,
+    )
+
+    table.add_column(
+        "---",
+        style="red",
+        width=16,
+        justify="left",
+    )
+
+    table.add_column(
+        "---",
+        style="red",
+        width=64,
+        justify="left",
+    )
+
+    if fig_path is not None:
+        table.add_row(":envelope_with_arrow: - Figure",
+                      f"{fig_path}")
+    if extra_path is not None:
+        table.add_row(":envelope_with_arrow: - Extra",
+                      f"{extra_path}")
+    if final_model_path is not None:
+        table.add_row(":envelope_with_arrow: - Model",
+                      f"{final_model_path}")
+    if every_k_model_path is not None:
+        table.add_row(":envelope_with_arrow: - Every-K",
+                      f"{every_k_model_path}")
+    if top_k_model_path is not None:
+        table.add_row(":envelope_with_arrow: - Top-K",
+                      f"{top_k_model_path}")
+
+    to_print = ((final_model_path is not None) +
+                (fig_path is not None) +
+                (extra_path is not None) +
+                (final_model_path is not None) +
+                (every_k_model_path is not None) +
+                (top_k_model_path is not None)) > 0
+    # Print storage update
+    if to_print:
+        Console(width=console_width).print(table, justify="left")
 
 
 if __name__ == "__main__":

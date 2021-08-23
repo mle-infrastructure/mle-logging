@@ -86,6 +86,8 @@ class ModelLog(object):
         """Save current state of the model as a checkpoint."""
         # If first model ckpt is saved - generate necessary directories
         self.model_save_counter += 1
+        self.stored_every_k = False
+        self.stored_top_k = False
         if self.model_save_counter == 1:
             self.setup_model_ckpt_dir()
 
@@ -117,6 +119,7 @@ class ModelLog(object):
             time = clock_to_track[self.ckpt_time_to_track].to_numpy()[-1]
             self.every_k_storage_time.append(time)
             self.every_k_ckpt_list.append(ckpt_path)
+            self.stored_every_k = True
 
     def save_top_k_model(self, model, clock_to_track, stats_to_track):
         """Store top-k checkpoints by performance."""
@@ -135,6 +138,7 @@ class ModelLog(object):
             self.top_k_performance.append(score)
             self.top_k_storage_time.append(time)
             self.top_k_ckpt_list.append(ckpt_path)
+            self.stored_top_k = True
             return
 
         # If minimize = replace worst performing model (max score)
@@ -153,6 +157,7 @@ class ModelLog(object):
                 self.top_k_model_save_fname + str(id_to_replace) + self.model_fname_ext
             )
             save_model_ckpt(model, ckpt_path, self.model_type)
+            self.stored_top_k = True
 
     def reload(self):
         """Reload results from previous experiment run."""
