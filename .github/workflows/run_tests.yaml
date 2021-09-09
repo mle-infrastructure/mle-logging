@@ -29,9 +29,9 @@ jobs:
         pip install flake8 black
         pip install tensorflow jax jaxlib dm-haiku sklearn
         pip install -e .
-    - name: Format with black style
-      run: |
-        black --verbose ./mle_logging
+#     - name: Format with black style
+#       run: |
+#         black --verbose ./mle_logging
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
