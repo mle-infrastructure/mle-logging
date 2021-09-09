@@ -72,7 +72,7 @@ def test_save_load_torch():
 
     # Load log and afterwards the model
     relog = load_log(log_config["experiment_dir"])
-    remodel = load_model(relog.meta.model_ckpt[0].decode(),
+    remodel = load_model(relog.meta.model_ckpt,
                          log_config["model_type"], model)
     assert type(remodel) == DummyModel
     # Finally -- clean up
@@ -115,7 +115,7 @@ def test_save_load_tf():
 
     # Load log and afterwards the model
     relog = load_log(log_config["experiment_dir"])
-    _ = load_model(relog.meta.model_ckpt[0].decode(),
+    _ = load_model(relog.meta.model_ckpt,
                    log_config["model_type"], model)
 
     # Finally -- clean up
@@ -161,7 +161,7 @@ def test_save_load_jax():
 
     # Load log and afterwards the model
     relog = load_log(log_config["experiment_dir"])
-    _ = load_model(relog.meta.model_ckpt[0].decode(),
+    _ = load_model(relog.meta.model_ckpt,
                    log_config["model_type"])
 
     # Finally -- clean up
@@ -193,7 +193,7 @@ def test_save_load_sklearn():
 
     # Load log and afterwards the model
     relog = load_log(log_config["experiment_dir"])
-    remodel = load_model(relog.meta.model_ckpt[0].decode(),
+    remodel = load_model(relog.meta.model_ckpt,
                          log_config["model_type"], model)
     assert type(remodel) == SVC
     # Finally -- clean up
@@ -225,7 +225,7 @@ def test_save_load_numpy():
 
     # Load log and afterwards the model
     relog = load_log(log_config["experiment_dir"])
-    remodel = load_model(relog.meta.model_ckpt[0].decode(),
+    remodel = load_model(relog.meta.model_ckpt,
                          log_config["model_type"], model)
     assert (remodel == model).all()
     # Finally -- clean up

@@ -99,18 +99,18 @@ def test_load_single():
 
     meta_keys = ['config_fname', 'eval_id', 'experiment_dir',
                  'extra_storage_paths', 'fig_storage_paths',
-                 'log_paths', 'model_ckpt', 'init_ckpt', 'model_type']
+                 'log_paths', 'model_ckpt', 'model_type']
     assert (collections.Counter(list(relog.meta.keys()))
             == collections.Counter(meta_keys))
 
     assert relog.stats.train_loss == 0.1234
     assert relog.time.num_updates == 10
     assert (relog.meta.fig_storage_paths
-            == b'experiment_dir/figures/fig_1_no_seed_provided.png')
+            == 'experiment_dir/figures/fig_1_no_seed_provided.png')
     assert (relog.meta.extra_storage_paths
-            == b'experiment_dir/extra/extra_1_no_seed_provided.pkl')
-    assert (relog.meta.model_ckpt[0].decode()
-            == f'experiment_dir/models/final/final_no_seed_provided.pt')
+            == 'experiment_dir/extra/extra_1_no_seed_provided.pkl')
+    assert (relog.meta.model_ckpt
+            == 'experiment_dir/models/final/final_no_seed_provided.pt')
     # Finally -- clean up
     shutil.rmtree(log_config["experiment_dir"])
 

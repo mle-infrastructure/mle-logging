@@ -60,6 +60,7 @@ experiment_dir
 ├── figures: Stores saved .png figures
 ├── logs: Stores .hdf5 log files (meta, stats, time)
 ├── models: Stores different model checkpoints
+    ├── init: Stores initial checkpoint
     ├── final: Stores most recent checkpoint
     ├── every_k: Stores every k-th checkpoint provided in update
     ├── top_k: Stores portfolio of top-k checkpoints based on performance

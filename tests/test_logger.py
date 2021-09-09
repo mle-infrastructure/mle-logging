@@ -136,12 +136,12 @@ def test_all_in_one():
     assert os.path.exists(file_to_check)
 
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final", "init_no_seed_provided.pt"
+        log_config["experiment_dir"], "models/init", "init_no_seed_provided.pt"
     )
     assert os.path.exists(file_to_check)
 
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/init", "final_no_seed_provided.pt"
+        log_config["experiment_dir"], "models/final", "final_no_seed_provided.pt"
     )
     assert os.path.exists(file_to_check)
 

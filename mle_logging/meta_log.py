@@ -17,6 +17,7 @@ class MetaLog(object):
         # Return shallow log if there is only a single experiment stored
         self.num_configs = len(list(meta_log.keys()))
         ph_run = list(meta_log.keys())[0]
+
         # Extract different variable names from meta log
         if not non_aggregated:
             self.meta_vars = list(meta_log[ph_run].meta.keys())
@@ -27,6 +28,16 @@ class MetaLog(object):
             self.meta_vars = list(meta_log[ph_run][ph_seed].meta.keys())
             self.stats_vars = list(meta_log[ph_run][ph_seed].stats.keys())
             self.time_vars = list(meta_log[ph_run][ph_seed].time.keys())
+
+        # Decode all byte strings in meta data
+        for run_id in self.meta_log.keys():
+            if "meta" in self.meta_log[run_id].keys():
+                self.meta_log[run_id] = decode_meta_strings(self.meta_log[run_id])
+            else:
+                for seed_id in self.meta_log[run_id].keys():
+                    self.meta_log[run_id][seed_id] = decode_meta_strings(
+                        self.meta_log[run_id][seed_id]
+                    )
 
         # Make log shallow if there is only a single experiment stored
         if self.num_configs == 1:
@@ -88,3 +99,26 @@ def subselect_meta_log(meta_log: DotMap, run_ids: List[str]) -> DotMap:
     for run_id in run_ids:
         sub_log[run_id] = meta_log[run_id]
     return sub_log
+
+
+def decode_meta_strings(log: DotMap):
+    """Decode all bytes encoded strings."""
+    for k in log.meta.keys():
+        temp_list = []
+        if type(log.meta[k]) != str:
+            list_to_loop = (
+                log.meta[k].tolist() if type(log.meta[k]) != list else log.meta[k]
+            )
+            for i in list_to_loop:
+                if type(i) == bytes:
+                    if len(i) > 0:
+                        temp_list.append(i.decode())
+                else:
+                    temp_list.append(i)
+        else:
+            temp_list.append(log.meta[k])
+        if len(temp_list) == 1:
+            log.meta[k] = temp_list[0]
+        else:
+            log.meta[k] = temp_list
+    return log

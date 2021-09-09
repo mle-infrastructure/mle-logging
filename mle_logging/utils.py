@@ -69,7 +69,7 @@ def moving_smooth_ts(ts, window_size: int = 20):
     return mean_ts, std_ts
 
 
-def visualize_1D_lcurves(
+def visualize_1D_lcurves(  # noqa: C901
     main_log: dict,
     iter_to_plot: str = "num_episodes",
     target_to_plot: Union[List[str], str] = "ep_reward",

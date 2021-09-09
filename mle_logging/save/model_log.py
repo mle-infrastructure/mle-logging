@@ -183,17 +183,23 @@ class ModelLog(object):
 
         # Reload counter & lists for top k scores and storage time to track
         if self.save_every_k_ckpt is not None:
-            self.every_k_ckpt_list = [ck.decode() for ck in meta_data.every_k_ckpt_list]
-            self.every_k_storage_time = meta_data.every_k_storage_time
+            if type(meta_data.every_k_ckpt_list) == list:
+                self.every_k_ckpt_list = [ck for ck in meta_data.every_k_ckpt_list]
+                self.every_k_storage_time = meta_data.every_k_storage_time
+            else:
+                self.every_k_ckpt_list = [meta_data.every_k_ckpt_list]
+                self.every_k_storage_time = [meta_data.every_k_storage_time]
+
+            print(self.every_k_ckpt_list)
             self.model_save_counter = int(
                 self.every_k_ckpt_list[-1].split(self.model_fname_ext)[0][-1]
             )
         else:
             self.model_save_counter = 0
         if self.save_top_k_ckpt is not None:
-            self.top_k_ckpt_list = [ck.decode() for ck in meta_data.top_k_ckpt_list]
+            self.top_k_ckpt_list = [ck for ck in meta_data.top_k_ckpt_list]
             self.top_k_storage_time = meta_data.top_k_storage_time
-            self.top_k_performance = meta_data.top_k_performance.tolist()
+            self.top_k_performance = meta_data.top_k_performance
 
 
 def save_model_ckpt(model, model_save_fname: str, model_type: str) -> None:

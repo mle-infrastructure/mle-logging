@@ -4,11 +4,13 @@ import shutil
 import datetime
 from typing import Union, List, Dict
 from .utils import write_to_hdf5
-from .comms import (print_welcome,
-                    print_startup,
-                    print_update,
-                    print_reload,
-                    print_storage)
+from .comms import (
+    print_welcome,
+    print_startup,
+    print_update,
+    print_reload,
+    print_storage,
+)
 from .save import StatsLog, TboardLog, ModelLog, FigureLog, ExtraLog
 
 
@@ -149,7 +151,9 @@ class MLELogger(object):
                 top_k_minimize_metric,
             )
         elif reload and verbose:
-            print_reload(self.experiment_dir,)
+            print_reload(
+                self.experiment_dir,
+            )
 
     def setup_experiment_dir(  # noqa: C901
         self,
@@ -237,21 +241,36 @@ class MLELogger(object):
             if self.stats_log.stats_update_counter % self.print_every_k_updates == 0:
                 # Print storage paths generated/updated
                 print_storage(
-                    fig_path=(self.figure_log.fig_storage_paths[-1]
-                              if plot_fig is not None else None),
-                    extra_path=(self.extra_log.extra_storage_paths[-1]
-                                if extra_obj is not None else None),
-                    init_model_path=(self.model_log.init_model_save_fname
-                                     if model is not None and
-                                     self.model_log.init_model_saved else None),
-                    final_model_path=(self.model_log.final_model_save_fname
-                                      if model is not None else None),
-                    every_k_model_path=(self.model_log.every_k_ckpt_list[-1]
-                                        if model is not None and
-                                        self.model_log.stored_every_k else None),
-                    top_k_model_path=(self.model_log.top_k_ckpt_list[-1]
-                                      if model is not None and
-                                      self.model_log.stored_top_k else None),
+                    fig_path=(
+                        self.figure_log.fig_storage_paths[-1]
+                        if plot_fig is not None
+                        else None
+                    ),
+                    extra_path=(
+                        self.extra_log.extra_storage_paths[-1]
+                        if extra_obj is not None
+                        else None
+                    ),
+                    init_model_path=(
+                        self.model_log.init_model_save_fname
+                        if model is not None and self.model_log.init_model_saved
+                        else None
+                    ),
+                    final_model_path=(
+                        self.model_log.final_model_save_fname
+                        if model is not None
+                        else None
+                    ),
+                    every_k_model_path=(
+                        self.model_log.every_k_ckpt_list[-1]
+                        if model is not None and self.model_log.stored_every_k
+                        else None
+                    ),
+                    top_k_model_path=(
+                        self.model_log.top_k_ckpt_list[-1]
+                        if model is not None and self.model_log.stored_top_k
+                        else None
+                    ),
                     print_first=self.print_counter == 0,
                 )
                 # Only print column name header at 1st print!
@@ -298,23 +317,14 @@ class MLELogger(object):
         # Store all relevant meta data (log filename, checkpoint filename)
         if self.log_save_counter == 0:
             data_paths = [
-                self.seed_id + "/meta/model_ckpt",
-                self.seed_id + "/meta/init_ckpt",
                 self.seed_id + "/meta/log_paths",
                 self.seed_id + "/meta/experiment_dir",
                 self.seed_id + "/meta/config_fname",
                 self.seed_id + "/meta/eval_id",
                 self.seed_id + "/meta/model_type",
             ]
-            final_ckpt_list, init_ckpt_list = [], []
-            if self.model_log.model_save_counter > 0:
-                final_ckpt_list.append(self.model_log.final_model_save_fname)
-            if self.model_log.init_model_saved:
-                init_ckpt_list.append(self.model_log.init_model_save_fname)
 
             data_to_log = [
-                final_ckpt_list,
-                init_ckpt_list,
                 [self.log_save_fname],
                 [self.experiment_dir],
                 [self.config_copy],
@@ -338,6 +348,21 @@ class MLELogger(object):
                     self.seed_id + "/meta/top_k_metric_name",
                     [self.model_log.top_k_metric_name],
                 )
+
+        # Store final and initial checkpoint if provided
+        if self.model_log.model_save_counter > 0:
+            write_to_hdf5(
+                self.log_save_fname,
+                self.seed_id + "/meta/model_ckpt",
+                [self.model_log.final_model_save_fname],
+            )
+
+        if self.model_log.init_model_saved:
+            write_to_hdf5(
+                self.log_save_fname,
+                self.seed_id + "/meta/init_ckpt",
+                [self.model_log.init_model_save_fname],
+            )
 
         # Store all time_to_track variables
         for o_name in self.stats_log.time_to_track:
