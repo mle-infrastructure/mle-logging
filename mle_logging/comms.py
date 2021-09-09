@@ -113,9 +113,9 @@ def print_startup(
     grid.add_row(renderables[2], renderables[3])
     grid.add_row(renderables[4], renderables[6])
     if save_every_k_ckpt is None and save_top_k_ckpt is not None:
-        grid.add_row(renderables[8],)
-    elif save_every_k_ckpt is not None and save_top_k_ckpt is None:
         grid.add_row(renderables[9],)
+    elif save_every_k_ckpt is not None and save_top_k_ckpt is None:
+        grid.add_row(renderables[8],)
     elif save_every_k_ckpt is not None and save_top_k_ckpt is not None:
         grid.add_row(renderables[8], renderables[9])
     # grid.add_row(renderables[10], renderables[11])
@@ -177,9 +177,11 @@ def print_reload(experiment_dir: str):
 
 def print_storage(fig_path: Union[str, None] = None,
                   extra_path: Union[str, None] = None,
+                  init_model_path: Union[str, None] = None,
                   final_model_path: Union[str, None] = None,
                   every_k_model_path: Union[str, None] = None,
-                  top_k_model_path: Union[str, None] = None):
+                  top_k_model_path: Union[str, None] = None,
+                  print_first: bool = False):
     """Rich print statement for object saving log."""
     table = Table(
         show_header=False,
@@ -208,7 +210,10 @@ def print_storage(fig_path: Union[str, None] = None,
     if extra_path is not None:
         table.add_row(":envelope_with_arrow: - Extra",
                       f"{extra_path}")
-    if final_model_path is not None:
+    if init_model_path is not None and print_first:
+        table.add_row(":envelope_with_arrow: - Model",
+                      f"{init_model_path}")
+    if final_model_path is not None and print_first:
         table.add_row(":envelope_with_arrow: - Model",
                       f"{final_model_path}")
     if every_k_model_path is not None:
@@ -218,10 +223,10 @@ def print_storage(fig_path: Union[str, None] = None,
         table.add_row(":envelope_with_arrow: - Top-K",
                       f"{top_k_model_path}")
 
-    to_print = ((final_model_path is not None) +
-                (fig_path is not None) +
+    to_print = ((fig_path is not None) +
                 (extra_path is not None) +
-                (final_model_path is not None) +
+                (init_model_path is not None and print_first) +
+                (final_model_path is not None and print_first) +
                 (every_k_model_path is not None) +
                 (top_k_model_path is not None)) > 0
     # Print storage update

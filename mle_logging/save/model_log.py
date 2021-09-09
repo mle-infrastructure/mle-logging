@@ -66,6 +66,7 @@ class ModelLog(object):
             elif self.model_type in ["jax", "sklearn", "numpy"]:
                 self.model_fname_ext = ".pkl"
             self.final_model_save_fname += self.model_fname_ext
+            self.init_model_save_fname += self.model_fname_ext
 
         # Initialize counter & lists for top k scores and storage time to track
         if reload:

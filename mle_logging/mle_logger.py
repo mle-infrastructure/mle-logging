@@ -235,19 +235,15 @@ class MLELogger(object):
         # Print the most current results
         if self.verbose and self.print_every_k_updates is not None:
             if self.stats_log.stats_update_counter % self.print_every_k_updates == 0:
-                # Only print column name header at 1st print!
-                print_update(
-                    self.time_to_print,
-                    self.what_to_print,
-                    c_tick,
-                    s_tick,
-                    self.print_counter == 0,
-                )
+                # Print storage paths generated/updated
                 print_storage(
                     fig_path=(self.figure_log.fig_storage_paths[-1]
                               if plot_fig is not None else None),
                     extra_path=(self.extra_log.extra_storage_paths[-1]
                                 if extra_obj is not None else None),
+                    init_model_path=(self.model_log.init_model_save_fname
+                                     if model is not None and
+                                     self.model_log.init_model_saved else None),
                     final_model_path=(self.model_log.final_model_save_fname
                                       if model is not None else None),
                     every_k_model_path=(self.model_log.every_k_ckpt_list[-1]
@@ -256,6 +252,15 @@ class MLELogger(object):
                     top_k_model_path=(self.model_log.top_k_ckpt_list[-1]
                                       if model is not None and
                                       self.model_log.stored_top_k else None),
+                    print_first=self.print_counter == 0,
+                )
+                # Only print column name header at 1st print!
+                print_update(
+                    self.time_to_print,
+                    self.what_to_print,
+                    c_tick,
+                    s_tick,
+                    self.print_counter == 0,
                 )
                 self.print_counter += 1
 
