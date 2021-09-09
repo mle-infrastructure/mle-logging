@@ -259,6 +259,10 @@ class MLELogger(object):
                 )
                 self.print_counter += 1
 
+    def save_init_model(self, model):
+        """Save initial model checkpoint."""
+        self.model_log.save_init_model(model)
+
     def save_model(self, model):
         """Save a model checkpoint."""
         self.model_log.save(
@@ -290,14 +294,22 @@ class MLELogger(object):
         if self.log_save_counter == 0:
             data_paths = [
                 self.seed_id + "/meta/model_ckpt",
+                self.seed_id + "/meta/init_ckpt",
                 self.seed_id + "/meta/log_paths",
                 self.seed_id + "/meta/experiment_dir",
                 self.seed_id + "/meta/config_fname",
                 self.seed_id + "/meta/eval_id",
                 self.seed_id + "/meta/model_type",
             ]
+            final_ckpt_list, init_ckpt_list = [], []
+            if self.model_log.model_save_counter > 0:
+                final_ckpt_list.append(self.model_log.final_model_save_fname)
+            if self.model_log.init_model_saved:
+                init_ckpt_list.append(self.model_log.init_model_save_fname)
+
             data_to_log = [
-                [self.model_log.final_model_save_fname],
+                final_ckpt_list,
+                init_ckpt_list,
                 [self.log_save_fname],
                 [self.experiment_dir],
                 [self.config_copy],

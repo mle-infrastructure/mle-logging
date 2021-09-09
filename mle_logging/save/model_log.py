@@ -38,10 +38,14 @@ class ModelLog(object):
         self.top_k_minimize_metric = top_k_minimize_metric
 
         # Create separate filenames for checkpoints & final trained model
-        self.final_ckpt_dir = os.path.join(self.experiment_dir, "models/final/")
+        self.ckpt_dir = os.path.join(self.experiment_dir, "models/")
         self.final_model_save_fname = os.path.join(
-            self.final_ckpt_dir, "final_" + seed_id
+            self.ckpt_dir, "final", "final_" + seed_id
         )
+        self.init_model_save_fname = os.path.join(
+            self.ckpt_dir, "init", "init_" + seed_id
+        )
+        self.init_model_saved = False
         if self.save_every_k_ckpt is not None:
             self.every_k_ckpt_list: List[str] = []
             self.every_k_dir = os.path.join(self.experiment_dir, "models/every_k/")
@@ -76,7 +80,7 @@ class ModelLog(object):
 
     def setup_model_ckpt_dir(self):
         """Create separate sub-dirs for checkpoints & final trained model."""
-        os.makedirs(self.final_ckpt_dir, exist_ok=True)
+        os.makedirs(self.ckpt_dir, exist_ok=True)
         if self.save_every_k_ckpt is not None:
             os.makedirs(self.every_k_dir, exist_ok=True)
         if self.save_top_k_ckpt is not None:
@@ -86,6 +90,8 @@ class ModelLog(object):
         """Save current state of the model as a checkpoint."""
         # If first model ckpt is saved - generate necessary directories
         self.model_save_counter += 1
+        if self.model_save_counter == 1:
+            os.makedirs(os.path.join(self.ckpt_dir, "final"), exist_ok=True)
         self.stored_every_k = False
         self.stored_top_k = False
         if self.model_save_counter == 1:
@@ -101,6 +107,12 @@ class ModelLog(object):
         # CASE 3: STORE TOP-K MODEL STATES BY SOME SCORE
         if self.save_top_k_ckpt is not None:
             self.save_top_k_model(model, clock_to_track, stats_to_track)
+
+    def save_init_model(self, model):
+        """Store the initial model checkpoint and replace old ckpt."""
+        os.makedirs(os.path.join(self.ckpt_dir, "init"), exist_ok=True)
+        save_model_ckpt(model, self.init_model_save_fname, self.model_type)
+        self.init_model_saved = True
 
     def save_final_model(self, model):
         """Store the most recent model checkpoint and replace old ckpt."""

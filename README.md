@@ -178,3 +178,9 @@ You can run the test suite via `python -m pytest -vv tests/`. If you find a bug 
 - Add a progress bar if total number of updates is specified
 - Add Weights and Biases Backend Support
 - Extend Tensorboard logging (for JAX/TF models)
+
+## Todos:
+
+- Don't print for every final checkpoint update
+- Make string decoding work also for single seed
+- Check welcome print statement `save_every_k_ckpt` info (None printed!)

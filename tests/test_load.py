@@ -99,7 +99,7 @@ def test_load_single():
 
     meta_keys = ['config_fname', 'eval_id', 'experiment_dir',
                  'extra_storage_paths', 'fig_storage_paths',
-                 'log_paths', 'model_ckpt', 'model_type']
+                 'log_paths', 'model_ckpt', 'init_ckpt', 'model_type']
     assert (collections.Counter(list(relog.meta.keys()))
             == collections.Counter(meta_keys))
 

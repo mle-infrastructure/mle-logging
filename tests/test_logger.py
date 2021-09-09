@@ -124,6 +124,7 @@ def test_all_in_one():
     log = MLELogger(**log_config)
 
     # Save a dict as a .pkl object
+    log.save_init_model(model)
     log.update(time_tic, stats_tic, model, fig, some_dict, save=True)
 
     # Assert the existence of the files
@@ -135,7 +136,12 @@ def test_all_in_one():
     assert os.path.exists(file_to_check)
 
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final", "final_no_seed_provided.pt"
+        log_config["experiment_dir"], "models/final", "init_no_seed_provided.pt"
+    )
+    assert os.path.exists(file_to_check)
+
+    file_to_check = os.path.join(
+        log_config["experiment_dir"], "models/init", "final_no_seed_provided.pt"
     )
     assert os.path.exists(file_to_check)
 
