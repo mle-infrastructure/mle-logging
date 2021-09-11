@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import shutil
+import yaml
 import datetime
 from typing import Union, List, Dict
 from .utils import write_to_hdf5
@@ -49,6 +50,7 @@ class MLELogger(object):
         time_to_print: Union[List[str], None] = None,
         what_to_print: Union[List[str], None] = None,
         config_fname: Union[str, None] = None,
+        config_dict: Union[dict, None] = None,
         experiment_dir: str = "/",
         seed_id: Union[str, int] = "no_seed_provided",
         overwrite: bool = False,
@@ -76,6 +78,7 @@ class MLELogger(object):
         self.setup_experiment_dir(
             experiment_dir,
             config_fname,
+            config_dict,
             self.seed_id,
             overwrite,
             reload,
@@ -159,6 +162,7 @@ class MLELogger(object):
         self,
         base_exp_dir: str,
         config_fname: Union[str, None],
+        config_dict: Union[dict, None],
         seed_id: str,
         overwrite_experiment_dir: bool = False,
         reload: bool = False,
@@ -202,6 +206,10 @@ class MLELogger(object):
         )
         if not os.path.exists(config_copy) and config_fname is not None:
             shutil.copy(config_fname, config_copy)
+            self.config_copy = config_copy
+        elif not os.path.exists(config_copy) and config_dict is not None:
+            with open(config_copy, 'w') as outfile:
+                yaml.dump(config_dict, outfile, default_flow_style=False)
             self.config_copy = config_copy
         else:
             self.config_copy = "config-json-not-provided"
