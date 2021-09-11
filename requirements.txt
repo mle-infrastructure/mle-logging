@@ -1,4 +1,5 @@
 commentjson
+pyyaml
 numpy
 pandas
 h5py

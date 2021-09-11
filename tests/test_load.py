@@ -179,8 +179,8 @@ def test_merge_load_configs():
     # Aggregate the different merged configuration .hdf5 files into single meta log
     eval_ids = ["config_1", "config_2"]
     seed_ids = ["seed_1", "seed_2"]
-    merge_config_logs(experiment_dir = f"{log_config1_seed1['experiment_dir']}",
-                      all_run_ids = eval_ids)
+    merge_config_logs(experiment_dir=f"{log_config1_seed1['experiment_dir']}",
+                      all_run_ids=eval_ids)
     meta_path = f"{log_config1_seed1['experiment_dir']}/meta_log.hdf5"
     meta_log = load_meta_log(meta_path)
 
