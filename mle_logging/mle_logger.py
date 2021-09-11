@@ -4,7 +4,7 @@ import shutil
 import yaml
 import datetime
 from typing import Union, List, Dict
-from .utils import write_to_hdf5
+from .utils import write_to_hdf5, load_json_config, load_yaml_config
 from .comms import (
     print_welcome,
     print_startup,
@@ -139,7 +139,7 @@ class MLELogger(object):
             print_welcome()
             print_startup(
                 self.experiment_dir,
-                config_fname,
+                self.config_copy,
                 time_to_track,
                 what_to_track,
                 model_type,
@@ -201,18 +201,28 @@ class MLELogger(object):
         os.makedirs(self.experiment_dir, exist_ok=True)
 
         # Copy over json configuration file if it exists
+        if config_fname is not None:
+            fname, fext = os.path.splitext(config_fname)
+        else:
+            fext = ".yaml"
         config_copy = os.path.join(
-            self.experiment_dir, self.timestr + self.base_str + ".json"
+            self.experiment_dir, self.timestr + self.base_str + fext
         )
-        if not os.path.exists(config_copy) and config_fname is not None:
+        if config_fname is not None:
             shutil.copy(config_fname, config_copy)
             self.config_copy = config_copy
-        elif not os.path.exists(config_copy) and config_dict is not None:
+            if fext == ".yaml":
+                self.config_dict = load_yaml_config(config_fname)
+            elif fext == ".json":
+                self.config_dict = load_json_config(config_fname)
+        elif config_dict is not None:
             with open(config_copy, 'w') as outfile:
                 yaml.dump(config_dict, outfile, default_flow_style=False)
             self.config_copy = config_copy
+            self.config_dict = config_dict
         else:
-            self.config_copy = "config-json-not-provided"
+            self.config_copy = "config-not-provided"
+            self.config_dict = {}
 
     def update(
         self,
@@ -330,6 +340,7 @@ class MLELogger(object):
                 self.seed_id + "/meta/config_fname",
                 self.seed_id + "/meta/eval_id",
                 self.seed_id + "/meta/model_type",
+                self.seed_id + "/meta/config_dict",
             ]
 
             data_to_log = [
@@ -338,6 +349,7 @@ class MLELogger(object):
                 [self.config_copy],
                 [self.base_str],
                 [self.model_log.model_type],
+                [str(self.config_dict)],
             ]
 
             for i in range(len(data_paths)):
@@ -395,9 +407,9 @@ class MLELogger(object):
                 data_to_store = np.stack(data_to_store)
                 dtype = np.dtype("float32")
             if type(data_to_store[0]) in [np.str_, str]:
-                dtype = "S200"
+                dtype = "S5000"
             if type(data_to_store[0]) in [bytes, np.str_]:
-                dtype = np.dtype("S200")
+                dtype = np.dtype("S5000")
             elif type(data_to_store[0]) == int:
                 dtype = np.dtype("int32")
             else:
@@ -419,7 +431,7 @@ class MLELogger(object):
                 self.model_log.every_k_storage_time,
                 self.model_log.every_k_ckpt_list,
             ]
-            data_types = ["int32", "S200"]
+            data_types = ["int32", "S5000"]
             for i in range(len(data_paths)):
                 write_to_hdf5(
                     self.log_save_fname, data_paths[i], data_to_log[i], data_types[i]
@@ -437,7 +449,7 @@ class MLELogger(object):
                 self.model_log.top_k_ckpt_list,
                 self.model_log.top_k_performance,
             ]
-            data_types = ["int32", "S200", "float32"]
+            data_types = ["int32", "S5000", "float32"]
             for i in range(len(data_paths)):
                 write_to_hdf5(
                     self.log_save_fname, data_paths[i], data_to_log[i], data_types[i]

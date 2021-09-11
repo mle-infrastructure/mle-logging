@@ -92,7 +92,7 @@ def aggregate_single_eval(  # noqa: C901
                 temp = (
                     np.array(new_results_dict[eval_name][ds][o_name])
                     .squeeze()
-                    .astype("U200")
+                    .astype("U5000")
                 )
                 # Get rid of duplicate experiment dir strings
                 if o_name in [
@@ -100,6 +100,7 @@ def aggregate_single_eval(  # noqa: C901
                     "eval_id",
                     "config_fname",
                     "model_type",
+                    "config_dict",
                 ]:
                     aggregate_dict[o_name] = str(np.unique(temp)[0])
                 else:

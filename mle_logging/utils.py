@@ -2,6 +2,8 @@ import pickle
 import pickle5
 from typing import Any, Union, List
 import h5py
+import yaml
+import commentjson
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -35,11 +37,24 @@ def load_pkl_object(filename: str) -> Any:
     return obj
 
 
+def load_yaml_config(cmd_args: dict):
+    """Load in YAML config file."""
+    with open(cmd_args.config_fname) as file:
+        yaml_config = yaml.load(file, Loader=yaml.FullLoader)
+    return yaml_config
+
+
+def load_json_config(config_fname: str):
+    """Load in JSON config file."""
+    json_config = commentjson.loads(open(config_fname, "r").read())
+    return json_config
+
+
 def write_to_hdf5(
-    log_fname: str, log_path: str, data_to_log: Any, dtype: str = "S200"
+    log_fname: str, log_path: str, data_to_log: Any, dtype: str = "S5000"
 ) -> None:
     # Store figure paths if any where created
-    if dtype == "S200":
+    if dtype == "S5000":
         try:
             data_to_store = [t.encode("ascii", "ignore") for t in data_to_log]
         except AttributeError:

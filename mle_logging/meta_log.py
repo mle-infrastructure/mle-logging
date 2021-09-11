@@ -1,3 +1,4 @@
+import ast
 from dotmap import DotMap
 from typing import Union, List
 from .utils import visualize_1D_lcurves
@@ -118,7 +119,12 @@ def decode_meta_strings(log: DotMap):
         else:
             temp_list.append(log.meta[k])
         if len(temp_list) == 1:
-            log.meta[k] = temp_list[0]
+            if k == "config_dict":
+                # Convert config into dict
+                config_dict = ast.literal_eval(temp_list[0])
+                log.meta[k] = config_dict
+            else:
+                log.meta[k] = temp_list[0]
         else:
             log.meta[k] = temp_list
     return log
