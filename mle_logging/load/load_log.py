@@ -12,6 +12,7 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
     h5f = h5py.File(log_fname, mode="r", swmr=True)
     # Get all ids of all runs (b_1_eval_0, b_1_eval_1, ...)
     run_names = list(h5f.keys())
+
     # Get all main data source keys (single vs multi-seed)
     data_sources = list(h5f[run_names[0]].keys())
     data_types = ["meta", "stats", "time"]
