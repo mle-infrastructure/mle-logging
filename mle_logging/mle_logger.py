@@ -71,19 +71,20 @@ class MLELogger(object):
         self.log_every_j_steps = log_every_j_steps
         self.print_every_k_updates = print_every_k_updates
         self.timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
-        self.log_save_counter = 0
+        self.log_save_counter = reload
+        self.log_setup_counter = reload
         self.seed_id = "seed_" + str(seed_id) if type(seed_id) == int else seed_id
+        self.config_fname = config_fname
+        self.config_dict = config_dict
 
         # Set up the logging directories - copy timestamped config file
-        self.setup_experiment_dir(
+        self.setup_experiment(
             experiment_dir,
             config_fname,
-            config_dict,
             self.seed_id,
             overwrite,
             reload,
         )
-        os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
 
         # STATS & TENSORBOARD LOGGING SETUP
         self.stats_log = StatsLog(
@@ -139,7 +140,7 @@ class MLELogger(object):
             print_welcome()
             print_startup(
                 self.experiment_dir,
-                self.config_copy,
+                self.config_fname,
                 time_to_track,
                 what_to_track,
                 model_type,
@@ -158,16 +159,15 @@ class MLELogger(object):
                 self.experiment_dir,
             )
 
-    def setup_experiment_dir(  # noqa: C901
+    def setup_experiment(  # noqa: C901
         self,
         base_exp_dir: str,
         config_fname: Union[str, None],
-        config_dict: Union[dict, None],
         seed_id: str,
         overwrite_experiment_dir: bool = False,
         reload: bool = False,
     ) -> None:
-        """Setup a directory for experiment & copy over config."""
+        """Setup directory name and clean up previous logging data."""
         # Get timestamp of experiment & create new directories
         if config_fname is not None:
             self.base_str = "_" + os.path.split(config_fname)[1].split(".")[0]
@@ -197,7 +197,10 @@ class MLELogger(object):
                 if os.path.exists(os.path.join(self.experiment_dir, "tboards/")):
                     shutil.rmtree(os.path.join(self.experiment_dir, "tboards/"))
 
-        # Create a new empty directory for the experiment (if not existing)
+    def create_logging_dir(self,
+                           config_fname: Union[str, None],
+                           config_dict: Union[dict, None],):
+        """ Create new empty dir for experiment (if not existing). """
         os.makedirs(self.experiment_dir, exist_ok=True)
 
         # Copy over json configuration file if it exists
@@ -223,6 +226,9 @@ class MLELogger(object):
         else:
             self.config_copy = "config-not-provided"
             self.config_dict = {}
+
+        # Create .hdf5 logging sub-directory
+        os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
 
     def update(
         self,
@@ -313,6 +319,11 @@ class MLELogger(object):
 
     def save_plot(self, fig, fig_fname: Union[str, None] = None):
         """Store a figure in a experiment_id/figures directory."""
+        # Create main logging dir and .hdf5 sub-directory
+        if not self.log_setup_counter:
+            self.create_logging_dir(self.config_fname,
+                                    self.config_dict)
+            self.log_setup_counter += 1
         self.figure_log.save(fig, fig_fname)
         write_to_hdf5(
             self.log_save_fname,
@@ -322,6 +333,11 @@ class MLELogger(object):
 
     def save_extra(self, obj, obj_fname: Union[str, None] = None):
         """Helper fct. to save object (dict/etc.) as .pkl in exp. subdir."""
+        # Create main logging dir and .hdf5 sub-directory
+        if not self.log_setup_counter:
+            self.create_logging_dir(self.config_fname,
+                                    self.config_dict)
+            self.log_setup_counter += 1
         self.extra_log.save(obj, obj_fname)
         write_to_hdf5(
             self.log_save_fname,
@@ -329,8 +345,14 @@ class MLELogger(object):
             self.extra_log.extra_storage_paths,
         )
 
-    def save(self):  # noqa: C901
+    def save(self):
         """Create compressed .hdf5 file containing group <random-seed-id>"""
+        # Create main logging dir and .hdf5 sub-directory
+        if not self.log_setup_counter:
+            self.create_logging_dir(self.config_fname,
+                                    self.config_dict)
+            self.log_setup_counter += 1
+
         # Create "datasets" to store in the hdf5 file [time, stats]
         # Store all relevant meta data (log filename, checkpoint filename)
         if self.log_save_counter == 0:

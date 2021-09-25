@@ -190,7 +190,6 @@ class ModelLog(object):
                 self.every_k_ckpt_list = [meta_data.every_k_ckpt_list]
                 self.every_k_storage_time = [meta_data.every_k_storage_time]
 
-            print(self.every_k_ckpt_list)
             self.model_save_counter = int(
                 self.every_k_ckpt_list[-1].split(self.model_fname_ext)[0][-1]
             )
