@@ -3,10 +3,9 @@
 [![PyPI version](https://badge.fury.io/py/mle-logging.svg)](https://badge.fury.io/py/mle-logging)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb)
+<a href="docs/logo_transparent.png_2"><img src="docs/logo_transparent.png" width="200" align="right" /></a>
 
 Simple logging of statistics, model checkpoints, plots and other objects for your Machine Learning Experiments (MLE). Furthermore, the `MLELogger` comes with smooth multi-seed result aggregation and combination of multi-configuration runs. For a quickstart checkout the [notebook blog](https://github.com/RobertTLange/mle-logging/blob/main/examples/getting_started.ipynb) 🚀
-
-![](https://github.com/RobertTLange/mle-logging/blob/main/docs/mle_logger_structure.png?raw=true)
 
 ## The API 🎮
 
@@ -51,6 +50,8 @@ log.update(time_tic, stats_tic, model, fig, extra, save=True)
 ```
 
 ### File Structure & Re-Loading 📚
+
+![](https://github.com/RobertTLange/mle-logging/blob/main/docs/mle_logger_structure.png?raw=true)
 
 The `MLELogger` will create a nested directory, which looks as follows:
 
