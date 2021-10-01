@@ -180,6 +180,5 @@ You can run the test suite via `python -m pytest -vv tests/`. If you find a bug 
 - Add a progress bar if total number of updates is specified
 - Add Weights and Biases Backend Support
 - Extend Tensorboard logging (for JAX/TF models)
-
-- [ ] Extend tracking also for time variables.
-- [ ] Extend tracking also after first data was stored.
+- Add option to extend tracking also for time variables.
+- Add option to extend tracking also after first data was stored.
