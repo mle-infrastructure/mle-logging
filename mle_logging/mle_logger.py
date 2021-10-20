@@ -27,6 +27,7 @@ class MLELogger(object):
         what_to_print (List[str]): subset columns of stats df to print out
         ======= TRACKING AND PRINTING VARIABLE NAMES
         config_fname (str): file path of configuration of experiment
+        config_dict(dict): dictionary of experiment config to store in yaml
         experiment_dir (str): base experiment directory
         seed_id (str): seed id to distinguish logs with (e.g. seed_0)
         overwrite_experiment_dir (bool): delete old log file/tboard dir
@@ -240,6 +241,9 @@ class MLELogger(object):
         save=False,
     ) -> None:
         """Update with the newest tick of performance stats, net weights"""
+        # Make sure that timeseries data consists of floats
+        stats_tick = {key: float(value) for (key, value) in stats_tick.items()}
+
         # Update the stats log with newest timeseries data
         c_tick, s_tick = self.stats_log.update(clock_tick, stats_tick)
         # Update the tensorboard log with the newest event
