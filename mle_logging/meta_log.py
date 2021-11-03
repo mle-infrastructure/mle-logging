@@ -57,8 +57,18 @@ class MetaLog(object):
         self,
         target_to_plot: str,
         iter_to_plot: Union[str, None] = None,
+        smooth_window: int = 1,
+        plot_title: Union[str, None] = None,
+        xy_labels: Union[list, None] = None,
+        base_label: str = "{}",
+        curve_labels: list = [],
+        every_nth_tick: Union[int, None] = None,
+        plot_std_bar: bool = False,
+        fname: Union[None, str] = None,
+        num_legend_cols: Union[int, None] = 1,
         fig=None,
         ax=None,
+        figsize: tuple = (9, 6),
     ) -> None:
         """Plot all runs in meta-log for variable 'target_to_plot'."""
         if iter_to_plot is None:
@@ -68,14 +78,24 @@ class MetaLog(object):
             self.meta_log,
             iter_to_plot,
             target_to_plot,
-            smooth_window=1,
-            every_nth_tick=None,
-            num_legend_cols=2,
+            smooth_window=smooth_window,
+            every_nth_tick=every_nth_tick,
+            num_legend_cols=num_legend_cols,
             run_ids=self.eval_ids,
+            plot_title=plot_title,
+            xy_labels=xy_labels,
+            base_label=base_label,
+            curve_labels=curve_labels,
+            plot_std_bar=plot_std_bar,
             fig=fig,
             ax=ax,
+            figsize=figsize,
         )
-        return fig, ax
+        # Save the figure if a filename was provided
+        if fname is not None:
+            fig.savefig(fname, dpi=300)
+        else:
+            return fig, ax
 
     @property
     def eval_ids(self) -> Union[int, None]:

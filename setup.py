@@ -28,7 +28,7 @@ if mo:
     verstr = mo.group(1)
 else:
     raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
-git_tar = f"https://github.com/RobertTLange/mle-logging/archive/v{verstr}.tar.gz"
+git_tar = f"https://github.com/mle-infrastructure/mle-logging/archive/v{verstr}.tar.gz"
 
 
 setup(
@@ -39,7 +39,7 @@ setup(
     description="Machine Learning Experiment Logging",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/RobertTLange/mle-logging",
+    url="https://github.com/mle-infrastructure/mle-logging",
     download_url=git_tar,
     classifiers=[
         "Programming Language :: Python :: 3.6",
@@ -55,7 +55,6 @@ setup(
     zip_safe=False,
     platforms="any",
     python_requires=">=3.6",
-    install_requires=parse_requirements(os.path.join(CURRENT_DIR,
-                                                     "requirements.txt")),
-    tests_require=["tensorflow", "dm-haiku", "sklearn"]
+    install_requires=parse_requirements(os.path.join(CURRENT_DIR, "requirements.txt")),
+    tests_require=["tensorflow", "dm-haiku", "sklearn"],
 )
