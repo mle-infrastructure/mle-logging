@@ -36,7 +36,7 @@ def merge_config_logs(experiment_dir: str, all_run_ids: list) -> None:
     # Need to make sure that run_ids & experiment folder match!
     for run_id in all_run_ids:
         for f in all_folders:
-            if f[len(experiment_dir) + 9:] == run_id:
+            if f[len(experiment_dir) + 9 :] == run_id:
                 hyperp_results_folder.append(f)
                 continue
 
@@ -46,8 +46,9 @@ def merge_config_logs(experiment_dir: str, all_run_ids: list) -> None:
         log_d_t = os.path.join(hyperp_results_folder[i], "logs/")
         for file in os.listdir(log_d_t):
             fname, fext = os.path.splitext(file)
-            if file.endswith(".hdf5") and fname in all_run_ids:
-                log_paths.append(os.path.join(log_d_t, file))
+            if file.endswith(".hdf5"):
+                if fname in all_run_ids or fname == "log":
+                    log_paths.append(os.path.join(log_d_t, file))
 
     # Merge individual run results into a single hdf5 file
     assert len(log_paths) == len(all_run_ids)

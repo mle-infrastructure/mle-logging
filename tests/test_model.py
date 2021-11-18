@@ -36,14 +36,15 @@ class DummyModel(nn.Module):
 def create_tensorflow_model():
     import tensorflow as tf
     from tensorflow import keras
-    model = tf.keras.models.Sequential([
-        keras.layers.Dense(512, activation='relu', input_shape=(784,)),
-        keras.layers.Dropout(0.2),
-        keras.layers.Dense(10)
-    ])
-    model.compile(optimizer='adam',
-                loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
-                metrics=[tf.metrics.SparseCategoricalAccuracy()])
+
+    model = tf.keras.models.Sequential(
+        [
+            keras.layers.Dense(512, activation="relu", input_shape=(784,)),
+            keras.layers.Dropout(0.2),
+            keras.layers.Dense(10),
+        ]
+    )
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
 
     return model
 
@@ -65,15 +66,13 @@ def test_save_load_torch():
     log.update(time_tic, stats_tic, model, save=True)
     # Assert the existence of the files
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final",
-        "final_no_seed_provided.pt"
+        log_config["experiment_dir"], "models/final", "final_no_seed_provided.pt"
     )
     assert os.path.exists(file_to_check)
 
     # Load log and afterwards the model
     relog = load_log(log_config["experiment_dir"])
-    remodel = load_model(relog.meta.model_ckpt,
-                         log_config["model_type"], model)
+    remodel = load_model(relog.meta.model_ckpt, log_config["model_type"], model)
     assert type(remodel) == DummyModel
     # Finally -- clean up
     shutil.rmtree(log_config["experiment_dir"])
@@ -96,27 +95,25 @@ def test_save_load_tf():
     log.update(time_tic, stats_tic, model, save=True)
     # Assert the existence of the files
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final",
-        "final_no_seed_provided.pt"
-        + ".data-00000-of-00001"
+        log_config["experiment_dir"],
+        "models/final",
+        "final_no_seed_provided.pt" + ".data-00000-of-00001",
     )
     assert os.path.exists(file_to_check)
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final",
-        "final_no_seed_provided.pt"
-        + ".index"
+        log_config["experiment_dir"],
+        "models/final",
+        "final_no_seed_provided.pt" + ".index",
     )
     assert os.path.exists(file_to_check)
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final",
-        "checkpoint"
+        log_config["experiment_dir"], "models/final", "checkpoint"
     )
     assert os.path.exists(file_to_check)
 
     # Load log and afterwards the model
     relog = load_log(log_config["experiment_dir"])
-    _ = load_model(relog.meta.model_ckpt,
-                   log_config["model_type"], model)
+    _ = load_model(relog.meta.model_ckpt, log_config["model_type"], model)
 
     # Finally -- clean up
     shutil.rmtree(log_config["experiment_dir"])
@@ -140,12 +137,16 @@ def test_save_load_jax():
 
     def lenet_fn(x):
         """Standard LeNet-300-100 MLP network."""
-        mlp = hk.Sequential([
+        mlp = hk.Sequential(
+            [
                 hk.Flatten(),
-                hk.Linear(300), jax.nn.relu,
-                hk.Linear(100), jax.nn.relu,
+                hk.Linear(300),
+                jax.nn.relu,
+                hk.Linear(100),
+                jax.nn.relu,
                 hk.Linear(10),
-        ])
+            ]
+        )
         return mlp(x)
 
     lenet = hk.without_apply_rng(hk.transform(lenet_fn))
@@ -154,15 +155,13 @@ def test_save_load_jax():
     log.update(time_tic, stats_tic, params, save=True)
     # Assert the existence of the files
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final",
-        "final_no_seed_provided.pkl"
+        log_config["experiment_dir"], "models/final", "final_no_seed_provided.pkl"
     )
     assert os.path.exists(file_to_check)
 
     # Load log and afterwards the model
     relog = load_log(log_config["experiment_dir"])
-    _ = load_model(relog.meta.model_ckpt,
-                   log_config["model_type"])
+    _ = load_model(relog.meta.model_ckpt, log_config["model_type"])
 
     # Finally -- clean up
     shutil.rmtree(log_config["experiment_dir"])
@@ -181,20 +180,18 @@ def test_save_load_sklearn():
     log = MLELogger(**log_config)
 
     # Save a torch model
-    model = SVC(gamma='auto')
+    model = SVC(gamma="auto")
     log.update(time_tic, stats_tic, model, save=True)
 
     # Assert the existence of the files
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final",
-        "final_no_seed_provided.pkl"
+        log_config["experiment_dir"], "models/final", "final_no_seed_provided.pkl"
     )
     assert os.path.exists(file_to_check)
 
     # Load log and afterwards the model
     relog = load_log(log_config["experiment_dir"])
-    remodel = load_model(relog.meta.model_ckpt,
-                         log_config["model_type"], model)
+    remodel = load_model(relog.meta.model_ckpt, log_config["model_type"], model)
     assert type(remodel) == SVC
     # Finally -- clean up
     shutil.rmtree(log_config["experiment_dir"])
@@ -218,15 +215,13 @@ def test_save_load_numpy():
 
     # Assert the existence of the files
     file_to_check = os.path.join(
-        log_config["experiment_dir"], "models/final",
-        "final_no_seed_provided.pkl"
+        log_config["experiment_dir"], "models/final", "final_no_seed_provided.pkl"
     )
     assert os.path.exists(file_to_check)
 
     # Load log and afterwards the model
     relog = load_log(log_config["experiment_dir"])
-    remodel = load_model(relog.meta.model_ckpt,
-                         log_config["model_type"], model)
+    remodel = load_model(relog.meta.model_ckpt, log_config["model_type"], model)
     assert (remodel == model).all()
     # Finally -- clean up
     shutil.rmtree(log_config["experiment_dir"])

@@ -1,6 +1,5 @@
 import os
 import shutil
-import datetime
 import numpy as np
 import torch.nn as nn
 import matplotlib.pyplot as plt

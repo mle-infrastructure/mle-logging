@@ -3,6 +3,7 @@ from .mle_logger import MLELogger
 from .meta_log import MetaLog
 from .load import load_log, load_meta_log, load_model
 from .merge import merge_config_logs, merge_seed_logs
+from .utils import load_config
 
 __all__ = [
     "__version__",
@@ -13,4 +14,5 @@ __all__ = [
     "load_model",
     "merge_config_logs",
     "merge_seed_logs",
+    "load_config",
 ]

@@ -1,3 +1,4 @@
+import os
 import pickle
 import pickle5
 from typing import Any, Union, List
@@ -35,6 +36,18 @@ def load_pkl_object(filename: str) -> Any:
     with open(filename, "rb") as input:
         obj = pickle5.load(input)
     return obj
+
+
+def load_config(config_fname: str, return_dotmap: bool = False):
+    """Load JSON/YAML config depending on file ending."""
+    fname, fext = os.path.splitext(config_fname)
+    if fext == ".yaml":
+        config = load_yaml_config(config_fname, return_dotmap)
+    elif fext == ".json":
+        config = load_yaml_config(config_fname, return_dotmap)
+    else:
+        raise ValueError("Only YAML & JSON configuration can be loaded.")
+    return config
 
 
 def load_yaml_config(config_fname: str, return_dotmap: bool = False):
