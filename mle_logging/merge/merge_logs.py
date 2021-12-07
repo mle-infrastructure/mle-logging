@@ -36,10 +36,10 @@ def merge_config_logs(experiment_dir: str, all_run_ids: list) -> None:
     # Need to make sure that run_ids & experiment folder match!
     for run_id in all_run_ids:
         for f in all_folders:
-            if f[len(experiment_dir) :] == run_id:
+            path, file = os.path.split(f)
+            if file == run_id:
                 hyperp_results_folder.append(f)
                 continue
-
     # Collect all paths to the .hdf5 file
     log_paths = []
     for i in range(len(hyperp_results_folder)):
