@@ -3,6 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/mle-logging.svg)](https://badge.fury.io/py/mle-logging)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mle-infrastructure/mle-logging/blob/main/examples/getting_started.ipynb)
+[![codecov](https://codecov.io/gh/mle-infrastructure/mle-logging/branch/main/graph/badge.svg)](https://codecov.io/gh/mle-infrastructure/mle-logging)
 <a href="https://github.com/mle-infrastructure/mle-logging/blob/main/docs/logo_transparent.png?raw=true"><img src="https://github.com/mle-infrastructure/mle-logging/blob/main/docs/logo_transparent.png?raw=true" width="200" align="right" /></a>
 
 Simple logging of statistics, model checkpoints, plots and other objects for your Machine Learning Experiments (MLE). Furthermore, the `MLELogger` comes with smooth multi-seed result aggregation and combination of multi-configuration runs. For a quickstart check out the [notebook blog](https://github.com/mle-infrastructure/mle-logging/blob/main/examples/getting_started.ipynb) 🚀
@@ -178,10 +179,12 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
 
 You can run the test suite via `python -m pytest -vv tests/`. If you find a bug or are missing your favourite feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:. Here are some features I want to implement for the next release:
 - [x] Add plot details (title, labels) to `meta_log.plot()`
+- [x] Get rid of time string in sub directories
+- [x] Add warning message when log dir is overwritten
 - [ ] Fix data type robustness (e.g. data can be of np.integer, etc.)
-- [ ] Add a progress bar if total number of updates is specified
 - [ ] Add Weights and Biases Backend Support
-- [ ] Extend Tensorboard logging (for JAX/TF models)
+- [ ] Add a PL Backend Support: https://pytorch-lightning.readthedocs.io/en/stable/extensions/logging.html
+- [ ] Extend Tensorboard logging of grads/parameter histograms (for JAX/TF models)
 - [ ] Add option to extend tracking also for time variables.
 - [ ] Add option to extend tracking also after first data was stored.
-- [ ] Add warning message when log dir is overwritten
+  - Arrays will have different lengths - store multiple time trackers?

@@ -1,6 +1,5 @@
 import os
 import shutil
-import datetime
 import collections
 import numpy as np
 import torch.nn as nn
@@ -23,7 +22,7 @@ log_config1_seed1 = {
     "experiment_dir": "experiment_dir/",
     "config_fname": "examples/config_1.json",
     "model_type": "torch",
-    "seed_id": "seed_1"
+    "seed_id": "seed_1",
 }
 
 log_config1_seed2 = {
@@ -32,7 +31,7 @@ log_config1_seed2 = {
     "experiment_dir": "experiment_dir/",
     "config_fname": "examples/config_1.json",
     "model_type": "torch",
-    "seed_id": "seed_2"
+    "seed_id": "seed_2",
 }
 
 log_config2_seed1 = {
@@ -41,7 +40,7 @@ log_config2_seed1 = {
     "experiment_dir": "experiment_dir/",
     "config_fname": "examples/config_2.json",
     "model_type": "torch",
-    "seed_id": "seed_1"
+    "seed_id": "seed_1",
 }
 
 log_config2_seed2 = {
@@ -50,7 +49,7 @@ log_config2_seed2 = {
     "experiment_dir": "experiment_dir/",
     "config_fname": "examples/config_2.json",
     "model_type": "torch",
-    "seed_id": "seed_2"
+    "seed_id": "seed_2",
 }
 
 time_tic1 = {"num_updates": 10, "num_epochs": 1}
@@ -97,20 +96,34 @@ def test_load_single():
     # Reload log and check correctness of results
     relog = load_log(log_config["experiment_dir"])
 
-    meta_keys = ['config_fname', 'config_dict', 'eval_id', 'experiment_dir',
-                 'extra_storage_paths', 'fig_storage_paths',
-                 'log_paths', 'model_ckpt', 'model_type']
-    assert (collections.Counter(list(relog.meta.keys()))
-            == collections.Counter(meta_keys))
+    meta_keys = [
+        "config_fname",
+        "config_dict",
+        "eval_id",
+        "experiment_dir",
+        "extra_storage_paths",
+        "fig_storage_paths",
+        "log_paths",
+        "model_ckpt",
+        "model_type",
+    ]
+    assert collections.Counter(list(relog.meta.keys())) == collections.Counter(
+        meta_keys
+    )
 
     assert relog.stats.train_loss == 0.1234
     assert relog.time.num_updates == 10
-    assert (relog.meta.fig_storage_paths
-            == 'experiment_dir/figures/fig_1_no_seed_provided.png')
-    assert (relog.meta.extra_storage_paths
-            == 'experiment_dir/extra/extra_1_no_seed_provided.pkl')
-    assert (relog.meta.model_ckpt
-            == 'experiment_dir/models/final/final_no_seed_provided.pt')
+    assert (
+        relog.meta.fig_storage_paths
+        == "experiment_dir/figures/fig_1_no_seed_provided.png"
+    )
+    assert (
+        relog.meta.extra_storage_paths
+        == "experiment_dir/extra/extra_1_no_seed_provided.pkl"
+    )
+    assert (
+        relog.meta.model_ckpt == "experiment_dir/models/final/final_no_seed_provided.pt"
+    )
     # Finally -- clean up
     shutil.rmtree(log_config["experiment_dir"])
 
@@ -129,14 +142,12 @@ def test_merge_load_seeds():
     log_seed2 = MLELogger(**log_config1_seed2)
     log_seed2.update(time_tic2, stats_tic2, model, fig, some_dict, save=True)
 
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
-    experiment_dir = log_config["experiment_dir"] + f"{timestr}_config_1/"
+    experiment_dir = log_config["experiment_dir"] + "config_1/"
     merged_path = os.path.join(experiment_dir, "logs", "config_1.hdf5")
 
     # Merge different random seeds into one .hdf5 file
     merge_seed_logs(merged_path, experiment_dir)
-    assert os.path.exists(os.path.join(experiment_dir,
-                                       f"{timestr}_config_1.json"))
+    assert os.path.exists(os.path.join(experiment_dir, "config_1.json"))
 
     # Load the merged log - Individual seeds can be accessed via log.seed_1, etc.
     log = load_log(experiment_dir)
@@ -170,31 +181,35 @@ def test_merge_load_configs():
     log_c2_s2.update(time_tic2, stats_tic2, model, fig, some_dict, save=True)
 
     # Merge different random seeds for each config into separate .hdf5 file
-    timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
-    merge_seed_logs(f"{log_config1_seed1['experiment_dir']}/{timestr}_config_1/logs/config_1.hdf5",
-                    f"{log_config1_seed1['experiment_dir']}/{timestr}_config_1/")
-    merge_seed_logs(f"{log_config1_seed1['experiment_dir']}/{timestr}_config_2/logs/config_2.hdf5",
-                    f"{log_config1_seed1['experiment_dir']}/{timestr}_config_2/")
+    merge_seed_logs(
+        f"{log_config1_seed1['experiment_dir']}/config_1/logs/config_1.hdf5",
+        f"{log_config1_seed1['experiment_dir']}/config_1/",
+    )
+    merge_seed_logs(
+        f"{log_config1_seed1['experiment_dir']}/config_2/logs/config_2.hdf5",
+        f"{log_config1_seed1['experiment_dir']}/config_2/",
+    )
 
     # Aggregate the different merged configuration .hdf5 files into single meta log
     eval_ids = ["config_1", "config_2"]
     seed_ids = ["seed_1", "seed_2"]
-    merge_config_logs(experiment_dir=f"{log_config1_seed1['experiment_dir']}",
-                      all_run_ids=eval_ids)
+    merge_config_logs(
+        experiment_dir=f"{log_config1_seed1['experiment_dir']}", all_run_ids=eval_ids
+    )
     meta_path = f"{log_config1_seed1['experiment_dir']}/meta_log.hdf5"
     meta_log = load_meta_log(meta_path)
 
-    assert (collections.Counter(meta_log.eval_ids)
-            == collections.Counter(eval_ids))
+    assert collections.Counter(meta_log.eval_ids) == collections.Counter(eval_ids)
 
-    aggreg_keys = ['mean', 'std', 'p50', 'p10', 'p25', 'p75', 'p90']
-    assert (collections.Counter(list(meta_log.config_1.stats.test_loss.keys()))
-            == collections.Counter(aggreg_keys))
+    aggreg_keys = ["mean", "std", "p50", "p10", "p25", "p75", "p90"]
+    assert collections.Counter(
+        list(meta_log.config_1.stats.test_loss.keys())
+    ) == collections.Counter(aggreg_keys)
 
     meta_log = load_meta_log(meta_path, aggregate_seeds=False)
-    assert (collections.Counter(meta_log.eval_ids)
-            == collections.Counter(eval_ids))
-    assert (collections.Counter(meta_log.config_1.keys())
-            == collections.Counter(seed_ids))
+    assert collections.Counter(meta_log.eval_ids) == collections.Counter(eval_ids)
+    assert collections.Counter(meta_log.config_1.keys()) == collections.Counter(
+        seed_ids
+    )
     # Finally -- clean up
     shutil.rmtree(log_config1_seed1["experiment_dir"])

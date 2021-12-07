@@ -2,8 +2,8 @@ import numpy as np
 import os
 import shutil
 import yaml
-import datetime
 from typing import Union, List, Dict
+from rich.console import Console
 from .utils import write_to_hdf5, load_json_config, load_yaml_config
 from .comms import (
     print_welcome,
@@ -30,7 +30,7 @@ class MLELogger(object):
         config_dict(dict): dictionary of experiment config to store in yaml
         experiment_dir (str): base experiment directory
         seed_id (str): seed id to distinguish logs with (e.g. seed_0)
-        overwrite_experiment_dir (bool): delete old log file/tboard dir
+        overwrite (bool): delete old log file/tboard dir
         ======= VERBOSITY/TBOARD LOGGING
         use_tboard (bool): whether to log to tensorboard
         log_every_j_steps (int): steps between log updates
@@ -71,7 +71,6 @@ class MLELogger(object):
         self.use_tboard = use_tboard
         self.log_every_j_steps = log_every_j_steps
         self.print_every_k_updates = print_every_k_updates
-        self.timestr = datetime.datetime.today().strftime("%Y-%m-%d")[2:]
         self.log_save_counter = reload
         self.log_setup_counter = reload
         self.seed_id = "seed_" + str(seed_id) if type(seed_id) == int else seed_id
@@ -171,11 +170,9 @@ class MLELogger(object):
         """Setup directory name and clean up previous logging data."""
         # Get timestamp of experiment & create new directories
         if config_fname is not None:
-            self.base_str = "_" + os.path.split(config_fname)[1].split(".")[0]
+            self.base_str = os.path.split(config_fname)[1].split(".")[0]
             if not reload:
-                self.experiment_dir = os.path.join(
-                    base_exp_dir, self.timestr + self.base_str + "/"
-                )
+                self.experiment_dir = os.path.join(base_exp_dir, self.base_str)
             else:
                 # Don't redefine experiment directory but get already existing
                 exp_dir = [
@@ -189,19 +186,27 @@ class MLELogger(object):
         self.log_save_fname = os.path.join(
             self.experiment_dir, "logs/", "log_" + seed_id + ".hdf5"
         )
+        aggregated_log_save_fname = os.path.join(
+            self.experiment_dir, "logs/", "log.hdf5"
+        )
 
         # Delete old experiment logging directory
         if overwrite_experiment_dir and not reload:
             if os.path.exists(self.log_save_fname):
                 os.remove(self.log_save_fname)
+            if os.path.exists(aggregated_log_save_fname):
+                os.remove(aggregated_log_save_fname)
             if self.use_tboard:
                 if os.path.exists(os.path.join(self.experiment_dir, "tboards/")):
                     shutil.rmtree(os.path.join(self.experiment_dir, "tboards/"))
+            Console().log("Be careful - you are overwriting an existing log.")
 
-    def create_logging_dir(self,
-                           config_fname: Union[str, None],
-                           config_dict: Union[dict, None],):
-        """ Create new empty dir for experiment (if not existing). """
+    def create_logging_dir(
+        self,
+        config_fname: Union[str, None],
+        config_dict: Union[dict, None],
+    ):
+        """Create new empty dir for experiment (if not existing)."""
         os.makedirs(self.experiment_dir, exist_ok=True)
 
         # Copy over json configuration file if it exists
@@ -209,9 +214,7 @@ class MLELogger(object):
             fname, fext = os.path.splitext(config_fname)
         else:
             fext = ".yaml"
-        config_copy = os.path.join(
-            self.experiment_dir, self.timestr + self.base_str + fext
-        )
+        config_copy = os.path.join(self.experiment_dir, self.base_str + fext)
         if config_fname is not None:
             shutil.copy(config_fname, config_copy)
             self.config_copy = config_copy
@@ -220,7 +223,7 @@ class MLELogger(object):
             elif fext == ".json":
                 self.config_dict = load_json_config(config_fname)
         elif config_dict is not None:
-            with open(config_copy, 'w') as outfile:
+            with open(config_copy, "w") as outfile:
                 yaml.dump(config_dict, outfile, default_flow_style=False)
             self.config_copy = config_copy
             self.config_dict = config_dict
@@ -325,8 +328,7 @@ class MLELogger(object):
         """Store a figure in a experiment_id/figures directory."""
         # Create main logging dir and .hdf5 sub-directory
         if not self.log_setup_counter:
-            self.create_logging_dir(self.config_fname,
-                                    self.config_dict)
+            self.create_logging_dir(self.config_fname, self.config_dict)
             self.log_setup_counter += 1
         self.figure_log.save(fig, fig_fname)
         write_to_hdf5(
@@ -339,8 +341,7 @@ class MLELogger(object):
         """Helper fct. to save object (dict/etc.) as .pkl in exp. subdir."""
         # Create main logging dir and .hdf5 sub-directory
         if not self.log_setup_counter:
-            self.create_logging_dir(self.config_fname,
-                                    self.config_dict)
+            self.create_logging_dir(self.config_fname, self.config_dict)
             self.log_setup_counter += 1
         self.extra_log.save(obj, obj_fname)
         write_to_hdf5(
@@ -353,8 +354,7 @@ class MLELogger(object):
         """Create compressed .hdf5 file containing group <random-seed-id>"""
         # Create main logging dir and .hdf5 sub-directory
         if not self.log_setup_counter:
-            self.create_logging_dir(self.config_fname,
-                                    self.config_dict)
+            self.create_logging_dir(self.config_fname, self.config_dict)
             self.log_setup_counter += 1
 
         # Create "datasets" to store in the hdf5 file [time, stats]

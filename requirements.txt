@@ -9,4 +9,4 @@ seaborn
 torch
 tensorboard
 pickle5
-rich==9.13.0
+rich
