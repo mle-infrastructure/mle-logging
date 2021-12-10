@@ -130,6 +130,8 @@ def decode_meta_strings(log: DotMap):
             list_to_loop = (
                 log.meta[k].tolist() if type(log.meta[k]) != list else log.meta[k]
             )
+            if type(list_to_loop) == str:
+                list_to_loop = [list_to_loop]
             for i in list_to_loop:
                 if type(i) == bytes:
                     if len(i) > 0:
