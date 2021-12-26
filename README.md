@@ -2,8 +2,8 @@
 [![Pyversions](https://img.shields.io/pypi/pyversions/mle-logging.svg?style=flat-square)](https://pypi.python.org/pypi/mle-logging)
 [![PyPI version](https://badge.fury.io/py/mle-logging.svg)](https://badge.fury.io/py/mle-logging)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mle-infrastructure/mle-logging/blob/main/examples/getting_started.ipynb)
 [![codecov](https://codecov.io/gh/mle-infrastructure/mle-logging/branch/main/graph/badge.svg)](https://codecov.io/gh/mle-infrastructure/mle-logging)
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mle-infrastructure/mle-logging/blob/main/examples/getting_started.ipynb)
 <a href="https://github.com/mle-infrastructure/mle-logging/blob/main/docs/logo_transparent.png?raw=true"><img src="https://github.com/mle-infrastructure/mle-logging/blob/main/docs/logo_transparent.png?raw=true" width="200" align="right" /></a>
 
 Simple logging of statistics, model checkpoints, plots and other objects for your Machine Learning Experiments (MLE). Furthermore, the `MLELogger` comes with smooth multi-seed result aggregation and combination of multi-configuration runs. For a quickstart check out the [notebook blog](https://github.com/mle-infrastructure/mle-logging/blob/main/examples/getting_started.ipynb) 🚀
@@ -178,6 +178,11 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
 ## Development & Milestones for Next Release
 
 You can run the test suite via `python -m pytest -vv tests/`. If you find a bug or are missing your favourite feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:. Here are some features I want to implement for the next release:
+- [ ] Decode `time` in log data.
+- [ ] `what_to_track`, `time_to_track` needed? - keys provided in ticks - make optional?
+- [ ] Add an `update_step` counter that is always logged to time every step (don't require `time_tic`) - minimal setting.
+- [ ] Add test for overwrite and for merge cases (one config, one seed explicit)
+- [ ] Add functionality for logging arrays (e.g. coefficients, etc.)
 - [ ] Fix data type robustness (e.g. data can be of np.integer, etc.)
 - [ ] Add Weights and Biases Backend Support
 - [ ] Add a PL Backend Support: https://pytorch-lightning.readthedocs.io/en/stable/extensions/logging.html

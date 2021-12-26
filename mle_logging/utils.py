@@ -44,7 +44,7 @@ def load_config(config_fname: str, return_dotmap: bool = False):
     if fext == ".yaml":
         config = load_yaml_config(config_fname, return_dotmap)
     elif fext == ".json":
-        config = load_yaml_config(config_fname, return_dotmap)
+        config = load_json_config(config_fname, return_dotmap)
     else:
         raise ValueError("Only YAML & JSON configuration can be loaded.")
     return config

@@ -18,24 +18,32 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
     data_types = ["meta", "stats", "time"]
 
     """
-    3 Possible Cases:
+    5 Possible Cases:
     1. Single config - single seed = no aggregation - 'no_seed_provided'
     2. Single config - multi seed = aggregation - seed_id -> meta, stats, time
     3. Multi config - multi seed = aggregation - config_id -> seed_id -> ...
+    4. Single config - single seed = aggregation - seed_id provided
+    5. Only multi seed -> no config_id key
     """
     case_1 = len(run_names) == 1 and collections.Counter(
         h5f[run_names[0]].keys()
     ) == collections.Counter(data_types)
-    case_2 = len(run_names) > 1 and collections.Counter(
+    case_2 = len(run_names) == 1 and collections.Counter(
         h5f[run_names[0]].keys()
     ) == collections.Counter(data_types)
     case_3 = len(run_names) > 1 and collections.Counter(
         h5f[run_names[0]].keys()
     ) != collections.Counter(data_types)
+    case_4 = len(run_names) == 1 and collections.Counter(
+        h5f[run_names[0]].keys()
+    ) != collections.Counter(data_types)
+    case_5 = len(run_names) > 1 and collections.Counter(
+        h5f[run_names[0]].keys()
+    ) == collections.Counter(data_types)
 
     result_dict = {key: {} for key in run_names}
     # Shallow versus deep aggregation
-    if case_1 or case_2:
+    if case_1 or case_2 or case_5:
         data_items = {
             data_types[i]: list(h5f[run_names[0]][data_types[i]].keys())
             for i in range(len(data_types))
@@ -49,7 +57,7 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
                     data_to_store[o_name] = run[ds][o_name][:]
                 source_to_store[ds] = data_to_store
             result_dict[rn] = source_to_store
-    else:
+    elif case_3 or case_4:
         data_items = {
             data_types[i]: list(
                 h5f[run_names[0]][data_sources[0]][data_types[i]].keys()
@@ -67,13 +75,12 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
                         data_to_store[o_name] = run[seed_id][ds][o_name][:]
                     source_to_store[ds] = data_to_store
                 result_dict[rn][seed_id] = source_to_store
-
     # Return as dot-callable dictionary
-    if aggregate_seeds and (case_2 or case_3):
+    if aggregate_seeds and (case_2 or case_3 or case_4 or case_5):
         # Important aggregation helper & compute mean/median/10p/50p/etc.
         from ..merge.aggregate import aggregate_over_seeds
 
-        result_dict = aggregate_over_seeds(result_dict, batch_case=case_3)
+        result_dict = aggregate_over_seeds(result_dict, batch_case=case_3 or case_4)
     return MetaLog(
         DotMap(result_dict, _dynamic=False),
         non_aggregated=(not aggregate_seeds and case_3),

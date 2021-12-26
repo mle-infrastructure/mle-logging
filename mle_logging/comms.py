@@ -233,29 +233,3 @@ def print_storage(
     # Print storage update
     if to_print:
         Console(width=console_width).print(table, justify="left")
-
-
-if __name__ == "__main__":
-    print_welcome()
-    print_startup(
-        experiment_dir="experiment_dir",
-        time_to_track=["meta_loss"],
-        what_to_track=["num_updates"],
-        model_type="torch",
-        ckpt_time_to_track="num_updates",
-        save_every_k_ckpt=None,
-        save_top_k_ckpt=2,
-        top_k_metric_name="meta_loss",
-        top_k_minimize_metric=True,
-    )
-
-    c_tick = pd.DataFrame(columns=["num_updates"])
-    c_tick.loc[0] = [10]
-    s_tick = pd.DataFrame(columns=["meta_loss", "train_loss", "test_loss"])
-    s_tick.loc[0] = [0.124456356436, 0.13451345135, 0.1345531513]
-    print_update(
-        time_to_print=["num_updates"],
-        what_to_print=["meta_loss", "train_loss", "test_loss"],
-        c_tick=c_tick,
-        s_tick=s_tick,
-    )

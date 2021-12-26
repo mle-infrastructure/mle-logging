@@ -193,13 +193,17 @@ class MLELogger(object):
         # Delete old experiment logging directory
         if overwrite_experiment_dir and not reload:
             if os.path.exists(self.log_save_fname):
+                Console().log("Be careful - you are overwriting an existing log.")
                 os.remove(self.log_save_fname)
             if os.path.exists(aggregated_log_save_fname):
+                Console().log(
+                    "Be careful - you are overwriting an existing aggregated log."
+                )
                 os.remove(aggregated_log_save_fname)
             if self.use_tboard:
+                Console().log("Be careful - you are overwriting existing tboards.")
                 if os.path.exists(os.path.join(self.experiment_dir, "tboards/")):
                     shutil.rmtree(os.path.join(self.experiment_dir, "tboards/"))
-            Console().log("Be careful - you are overwriting an existing log.")
 
     def create_logging_dir(
         self,
@@ -214,8 +218,9 @@ class MLELogger(object):
             fname, fext = os.path.splitext(config_fname)
         else:
             fext = ".yaml"
-        config_copy = os.path.join(self.experiment_dir, self.base_str + fext)
+
         if config_fname is not None:
+            config_copy = os.path.join(self.experiment_dir, self.base_str + fext)
             shutil.copy(config_fname, config_copy)
             self.config_copy = config_copy
             if fext == ".yaml":
@@ -223,6 +228,7 @@ class MLELogger(object):
             elif fext == ".json":
                 self.config_dict = load_json_config(config_fname)
         elif config_dict is not None:
+            config_copy = os.path.join(self.experiment_dir, "config_dict" + fext)
             with open(config_copy, "w") as outfile:
                 yaml.dump(config_dict, outfile, default_flow_style=False)
             self.config_copy = config_copy

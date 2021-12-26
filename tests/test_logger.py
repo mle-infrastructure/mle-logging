@@ -156,3 +156,9 @@ def test_all_in_one():
 
     # Finally -- clean up
     shutil.rmtree(log_config["experiment_dir"])
+
+
+def test_comms():
+    """Test functional verbose statements."""
+    log = MLELogger(**log_config, verbose=True)
+    log.update(time_tic, stats_tic, model, fig, some_dict, save=True)

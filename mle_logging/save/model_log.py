@@ -37,6 +37,13 @@ class ModelLog(object):
         self.top_k_metric_name = top_k_metric_name
         self.top_k_minimize_metric = top_k_minimize_metric
 
+        if self.save_every_k_ckpt:
+            assert self.ckpt_time_to_track is not None
+        if self.save_top_k_ckpt:
+            assert self.ckpt_time_to_track is not None
+            assert self.top_k_metric_name is not None
+            assert self.top_k_minimize_metric is not None
+
         # Create separate filenames for checkpoints & final trained model
         self.ckpt_dir = os.path.join(self.experiment_dir, "models/")
         self.final_model_save_fname = os.path.join(
