@@ -3,6 +3,7 @@
 ### Added
 
 - Adds new case to `MetaLog` loading: Single configuration with explicit seed.
+- Adds test coverage for `comms` and `utils`
 
 ### Changed
 

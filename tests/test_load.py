@@ -6,7 +6,7 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 from mle_logging import MLELogger
 from mle_logging import merge_seed_logs, load_log
-from mle_logging import merge_config_logs, load_meta_log
+from mle_logging import merge_config_logs
 
 
 log_config = {
@@ -197,7 +197,7 @@ def test_merge_load_configs():
         experiment_dir=f"{log_config1_seed1['experiment_dir']}", all_run_ids=eval_ids
     )
     meta_path = f"{log_config1_seed1['experiment_dir']}/meta_log.hdf5"
-    meta_log = load_meta_log(meta_path)
+    meta_log = load_log(meta_path, aggregate_seeds=True)
 
     assert collections.Counter(meta_log.eval_ids) == collections.Counter(eval_ids)
 
@@ -206,7 +206,7 @@ def test_merge_load_configs():
         list(meta_log.config_1.stats.test_loss.keys())
     ) == collections.Counter(aggreg_keys)
 
-    meta_log = load_meta_log(meta_path, aggregate_seeds=False)
+    meta_log = load_log(meta_path, aggregate_seeds=False)
     assert collections.Counter(meta_log.eval_ids) == collections.Counter(eval_ids)
     assert collections.Counter(meta_log.config_1.keys()) == collections.Counter(
         seed_ids

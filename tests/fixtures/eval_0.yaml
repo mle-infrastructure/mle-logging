@@ -1,0 +1,3 @@
+arch: mlp
+batch_size: 3
+lrate: 0.360379148648584

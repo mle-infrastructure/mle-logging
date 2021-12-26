@@ -4,8 +4,9 @@ import shutil
 import yaml
 from typing import Union, List, Dict
 from rich.console import Console
-from .utils import write_to_hdf5, load_json_config, load_yaml_config
-from .comms import (
+from .utils import (
+    write_to_hdf5,
+    load_config,
     print_welcome,
     print_startup,
     print_update,
@@ -223,10 +224,7 @@ class MLELogger(object):
             config_copy = os.path.join(self.experiment_dir, self.base_str + fext)
             shutil.copy(config_fname, config_copy)
             self.config_copy = config_copy
-            if fext == ".yaml":
-                self.config_dict = load_yaml_config(config_fname)
-            elif fext == ".json":
-                self.config_dict = load_json_config(config_fname)
+            self.config_dict = load_config(config_fname)
         elif config_dict is not None:
             config_copy = os.path.join(self.experiment_dir, "config_dict" + fext)
             with open(config_copy, "w") as outfile:

@@ -5,7 +5,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich import box
 import datetime
-from ._version import __version__
+from .._version import __version__
 
 
 console_width = 80
