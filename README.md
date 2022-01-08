@@ -175,21 +175,19 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
                 top_k_minimize_metric=True)
 ```
 
-## Development & Milestones for Next Release
+### Citing the MLE-Infrastructure ✏️
 
-You can run the test suite via `python -m pytest -vv tests/`. If you find a bug or are missing your favourite feature, feel free to contact me [@RobertTLange](https://twitter.com/RobertTLange) or create an issue :hugs:. Here are some features I want to implement for the next release:
-- [ ] `auto_reload_model` option in log?! - if `ckpt` is in `train_config` keys, try loading?! 
-- [ ] Add `load_model` example to notebook
-- [ ] Add `test_utils` for config loading, etc.
-- [ ] Decode `time` in log data.
-- [ ] `what_to_track`, `time_to_track` needed? - keys provided in ticks - make optional?
-- [ ] Add an `update_step` counter that is always logged to time every step (don't require `time_tic`) - minimal setting.
-- [ ] Add test for overwrite and for merge cases (one config, one seed explicit)
-- [ ] Add functionality for logging arrays (e.g. coefficients, etc.)
-- [ ] Fix data type robustness (e.g. data can be of np.integer, etc.)
-- [ ] Add Weights and Biases Backend Support
-- [ ] Add a PL Backend Support: https://pytorch-lightning.readthedocs.io/en/stable/extensions/logging.html
-- [ ] Extend Tensorboard logging of grads/parameter histograms (for JAX/TF models)
-- [ ] Add option to extend tracking also for time variables.
-- [ ] Add option to extend tracking also after first data was stored.
-  - Arrays will have different lengths - store multiple time trackers?
+If you use `mle-logging` in your research, please cite it as follows:
+
+```
+@software{mle_infrastructure2021github,
+  author = {Robert Tjarko Lange},
+  title = {{MLE-Infrastructure}: A Set of Lightweight Tools for Distributed Machine Learning Experimentation},
+  url = {http://github.com/mle-infrastructure},
+  year = {2021},
+}
+```
+
+## Development 👷
+
+You can run the test suite via `python -m pytest -vv tests/`. If you find a bug or are missing your favourite feature, feel free to create an issue and/or start [contributing](CONTRIBUTING.md) :hugs:.

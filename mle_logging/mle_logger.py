@@ -47,13 +47,13 @@ class MLELogger(object):
 
     def __init__(
         self,
-        time_to_track: List[str],
-        what_to_track: List[str],
+        experiment_dir: str = "/",
+        time_to_track: List[str] = [],
+        what_to_track: List[str] = [],
         time_to_print: Union[List[str], None] = None,
         what_to_print: Union[List[str], None] = None,
         config_fname: Union[str, None] = None,
         config_dict: Union[dict, None] = None,
-        experiment_dir: str = "/",
         seed_id: Union[str, int] = "no_seed_provided",
         overwrite: bool = False,
         use_tboard: bool = False,
@@ -128,14 +128,8 @@ class MLELogger(object):
         # VERBOSITY SETUP: Set up what to print
         self.verbose = verbose
         self.print_counter = 0
-        if time_to_print is None:
-            self.time_to_print = ["time"] + time_to_track
-        else:
-            self.time_to_print = ["time"] + time_to_print
-        if what_to_print is None:
-            self.what_to_print = what_to_track
-        else:
-            self.what_to_print = what_to_print
+        self.time_to_print = time_to_print
+        self.what_to_print = what_to_print
 
         if not reload and verbose:
             print_welcome()
@@ -309,9 +303,17 @@ class MLELogger(object):
                     print_first=self.print_counter == 0,
                 )
                 # Only print column name header at 1st print!
+                if self.time_to_print is None:
+                    time_to_p = self.stats_log.time_to_track
+                else:
+                    time_to_p = ["time", "time_elapsed", "num_updates"]
+                if self.what_to_print is None:
+                    what_to_p = self.stats_log.what_to_track
+                else:
+                    what_to_p = []
                 print_update(
-                    self.time_to_print,
-                    self.what_to_print,
+                    time_to_p,
+                    what_to_p,
                     c_tick,
                     s_tick,
                     self.print_counter == 0,
@@ -325,7 +327,7 @@ class MLELogger(object):
     def save_model(self, model):
         """Save a model checkpoint."""
         self.model_log.save(
-            model, self.stats_log.clock_to_track, self.stats_log.stats_to_track
+            model, self.stats_log.clock_tracked, self.stats_log.stats_tracked
         )
 
     def save_plot(self, fig, fig_fname: Union[str, None] = None):
@@ -420,19 +422,20 @@ class MLELogger(object):
                 write_to_hdf5(
                     self.log_save_fname,
                     self.seed_id + "/time/" + o_name,
-                    self.stats_log.clock_to_track[o_name].values.tolist(),
+                    self.stats_log.clock_tracked[o_name],
                     dtype="float32",
                 )
             else:
                 write_to_hdf5(
                     self.log_save_fname,
                     self.seed_id + "/time/" + o_name,
-                    self.stats_log.clock_to_track[o_name].values.tolist(),
+                    self.stats_log.clock_tracked[o_name],
                 )
 
         # Store all what_to_track variables
         for o_name in self.stats_log.what_to_track:
-            data_to_store = self.stats_log.stats_to_track[o_name].to_numpy()
+            data_to_store = self.stats_log.stats_tracked[o_name]
+            data_to_store = np.array(data_to_store)
             if type(data_to_store[0]) == np.ndarray:
                 data_to_store = np.stack(data_to_store)
                 dtype = np.dtype("float32")

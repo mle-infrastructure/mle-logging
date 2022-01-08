@@ -1,4 +1,4 @@
-import pandas as pd
+import numpy as np
 from typing import Union
 from rich.console import Console
 from rich.panel import Panel
@@ -163,9 +163,9 @@ def print_update(time_to_print, what_to_print, c_tick, s_tick, print_header):
                 width=12,
                 justify="center",
             )
-    row_list = pd.concat(
-        [c_tick[time_to_print], s_tick[what_to_print].round(4)], axis=1
-    ).values.tolist()[0]
+    row_list = [c_tick[c] for c in time_to_print] + [
+        np.round_(s_tick[s], 3) for s in what_to_print
+    ]
     row_str_list = [str(v) for v in row_list]
     table.add_row(*row_str_list)
 

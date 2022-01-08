@@ -94,7 +94,7 @@ class ModelLog(object):
         if self.save_top_k_ckpt is not None:
             os.makedirs(self.top_k_dir, exist_ok=True)
 
-    def save(self, model, clock_to_track, stats_to_track):  # noqa: C901
+    def save(self, model, clock_tracked: dict, stats_tracked: dict):  # noqa: C901
         """Save current state of the model as a checkpoint."""
         # If first model ckpt is saved - generate necessary directories
         self.model_save_counter += 1
@@ -110,11 +110,11 @@ class ModelLog(object):
 
         # CASE 2: SEPARATE STORAGE OF EVERY K-TH LOGGED MODEL STATE
         if self.save_every_k_ckpt is not None:
-            self.save_every_k_model(model, clock_to_track)
+            self.save_every_k_model(model, clock_tracked)
 
         # CASE 3: STORE TOP-K MODEL STATES BY SOME SCORE
         if self.save_top_k_ckpt is not None:
-            self.save_top_k_model(model, clock_to_track, stats_to_track)
+            self.save_top_k_model(model, clock_tracked, stats_tracked)
 
     def save_init_model(self, model):
         """Store the initial model checkpoint and replace old ckpt."""
@@ -126,7 +126,7 @@ class ModelLog(object):
         """Store the most recent model checkpoint and replace old ckpt."""
         save_model_ckpt(model, self.final_model_save_fname, self.model_type)
 
-    def save_every_k_model(self, model, clock_to_track):
+    def save_every_k_model(self, model, clock_tracked: dict):
         """Store every kth provided checkpoint."""
         if self.model_save_counter % self.save_every_k_ckpt == 0:
             ckpt_path = (
@@ -136,16 +136,16 @@ class ModelLog(object):
             )
             save_model_ckpt(model, ckpt_path, self.model_type)
             # Use latest update performance for last checkpoint
-            time = clock_to_track[self.ckpt_time_to_track].to_numpy()[-1]
+            time = clock_tracked[self.ckpt_time_to_track][-1]
             self.every_k_storage_time.append(time)
             self.every_k_ckpt_list.append(ckpt_path)
             self.stored_every_k = True
 
-    def save_top_k_model(self, model, clock_to_track, stats_to_track):
+    def save_top_k_model(self, model, clock_tracked: dict, stats_tracked: dict):
         """Store top-k checkpoints by performance."""
         # Use latest update performance for last checkpoint
-        score = stats_to_track[self.top_k_metric_name].to_numpy()[-1]
-        time = clock_to_track[self.ckpt_time_to_track].to_numpy()[-1]
+        score = stats_tracked[self.top_k_metric_name][-1]
+        time = clock_tracked[self.ckpt_time_to_track][-1]
 
         # Fill up empty top k slots
         if len(self.top_k_performance) < self.save_top_k_ckpt:

@@ -44,7 +44,7 @@ log_config2_seed1 = {
 }
 
 log_config2_seed2 = {
-    "time_to_track": ["num_updates", "num_epochs"],
+    "time_to_track": ["num_steps", "num_epochs"],
     "what_to_track": ["train_loss", "test_loss"],
     "experiment_dir": "experiment_dir/",
     "config_fname": "examples/config_2.json",
@@ -52,10 +52,10 @@ log_config2_seed2 = {
     "seed_id": "seed_2",
 }
 
-time_tic1 = {"num_updates": 10, "num_epochs": 1}
+time_tic1 = {"num_steps": 10, "num_epochs": 1}
 stats_tic1 = {"train_loss": 0.1234, "test_loss": 0.1235}
 
-time_tic2 = {"num_updates": 10, "num_epochs": 1}
+time_tic2 = {"num_steps": 10, "num_epochs": 1}
 stats_tic2 = {"train_loss": 0.2, "test_loss": 0.1}
 
 
@@ -112,7 +112,7 @@ def test_load_single():
     )
 
     assert relog.stats.train_loss == 0.1234
-    assert relog.time.num_updates == 10
+    assert relog.time.num_steps == 10
     assert (
         relog.meta.fig_storage_paths
         == "experiment_dir/figures/fig_1_no_seed_provided.png"

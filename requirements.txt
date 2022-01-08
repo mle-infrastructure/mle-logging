@@ -1,7 +1,6 @@
 commentjson
 pyyaml>=5.1
 numpy
-pandas
 h5py
 dotmap
 matplotlib
