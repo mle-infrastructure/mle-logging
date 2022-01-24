@@ -1,12 +1,13 @@
 import os
 import pickle
 import pickle5
-from typing import Any, Union, List
+from typing import Any, Union, List, Tuple
 import h5py
 import yaml
 import commentjson
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import re
 from dotmap import DotMap
@@ -24,22 +25,50 @@ sns.set(
 )
 
 
-def save_pkl_object(obj, filename: str) -> None:
-    """Helper to store pickle objects."""
+def save_pkl_object(obj: Any, filename: str) -> None:
+    """Store objects as pickle files.
+
+    Args:
+        obj (Any): Object to pickle.
+        filename (str): File path to store object in.
+    """
     with open(filename, "wb") as output:
         # Overwrites any existing file.
         pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
 
 
 def load_pkl_object(filename: str) -> Any:
-    """Helper to reload pickle objects."""
+    """Reload pickle objects from path.
+
+    Args:
+        filename (str): File path to load object from.
+
+    Returns:
+        Any: Reloaded object.
+    """
     with open(filename, "rb") as input:
+        # Load with pickle5 for python version compatibility
         obj = pickle5.load(input)
     return obj
 
 
-def load_config(config_fname: str, return_dotmap: bool = False):
-    """Load JSON/YAML config depending on file ending."""
+def load_config(
+    config_fname: str, return_dotmap: bool = False
+) -> Union[dict, DotMap]:
+    """Load JSON/YAML config depending on file ending.
+
+    Args:
+        config_fname (str):
+            File path to YAML/JSON configuration file.
+        return_dotmap (bool, optional):
+            Option to return dot indexable dictionary. Defaults to False.
+
+    Raises:
+        ValueError: Only YAML/JSON files can be loaded.
+
+    Returns:
+        Union[dict, DotMap]: Loaded dictionary from file.
+    """
     fname, fext = os.path.splitext(config_fname)
     if fext == ".yaml":
         config = load_yaml_config(config_fname, return_dotmap)
@@ -50,18 +79,57 @@ def load_config(config_fname: str, return_dotmap: bool = False):
     return config
 
 
-def load_yaml_config(config_fname: str, return_dotmap: bool = False):
-    """Load in YAML config file."""
+def load_yaml_config(
+    config_fname: str, return_dotmap: bool = False
+) -> Union[dict, DotMap]:
+    """Load in YAML config file.
+
+    Args:
+        config_fname (str):
+            File path to YAML configuration file.
+        return_dotmap (bool, optional):
+            Option to return dot indexable dictionary. Defaults to False.
+
+    Returns:
+        Union[dict, DotMap]: Loaded dictionary from YAML file.
+    """
+    loader = yaml.SafeLoader
+    loader.add_implicit_resolver(
+        "tag:yaml.org,2002:float",
+        re.compile(
+            """^(?:
+        [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
+        |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
+        |\\.[0-9_]+(?:[eE][-+][0-9]+)?
+        |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
+        |[-+]?\\.(?:inf|Inf|INF)
+        |\\.(?:nan|NaN|NAN))$""",
+            re.X,
+        ),
+        list("-+0123456789."),
+    )
     with open(config_fname) as file:
-        yaml_config = yaml.load(file, Loader=yaml.FullLoader)
+        yaml_config = yaml.load(file, Loader=loader)
     if not return_dotmap:
         return yaml_config
     else:
         return DotMap(yaml_config)
 
 
-def load_json_config(config_fname: str, return_dotmap: bool = False):
-    """Load in JSON config file."""
+def load_json_config(
+    config_fname: str, return_dotmap: bool = False
+) -> Union[dict, DotMap]:
+    """Load in JSON config file.
+
+    Args:
+        config_fname (str):
+            File path to JSON configuration file.
+        return_dotmap (bool, optional):
+            Option to return dot indexable dictionary. Defaults to False.
+
+    Returns:
+        Union[dict, DotMap]: Loaded dictionary from JSON file.
+    """
     json_config = commentjson.loads(open(config_fname, "r").read())
     if not return_dotmap:
         return json_config
@@ -72,6 +140,14 @@ def load_json_config(config_fname: str, return_dotmap: bool = False):
 def write_to_hdf5(
     log_fname: str, log_path: str, data_to_log: Any, dtype: str = "S5000"
 ) -> None:
+    """Writes data to an hdf5 file and specified log path within.
+
+    Args:
+        log_fname (str): Path of hdf5 file.
+        log_path (str): Path within hdf5 file to store data at.
+        data_to_log (Any): Data (array, list, etc.) to store at `log_path`
+        dtype (str, optional): Data type to store as. Defaults to "S5000".
+    """
     # Store figure paths if any where created
     if dtype == "S5000":
         try:
@@ -95,8 +171,21 @@ def write_to_hdf5(
     h5f.close()
 
 
-def moving_smooth_ts(ts, window_size: int = 20):
-    """Smoothes a time series using a moving average filter."""
+def moving_smooth_ts(
+    ts, window_size: int = 20
+) -> Tuple[pd.core.series.Series, pd.core.series.Series]:
+    """Smoothes a time series using a moving average filter.
+
+    Args:
+        ts:
+            Time series to smooth.
+        window_size (int, optional):
+            Window size to apply for moving average. Defaults to 20.
+
+    Returns:
+        Tuple[pd.core.series.Series, pd.core.series.Series]:
+            Smoothed mean and standard deviation of time series.
+    """
     smooth_df = pd.DataFrame(ts)
     mean_ts = smooth_df[0].rolling(window_size, min_periods=1).mean()
     std_ts = smooth_df[0].rolling(window_size, min_periods=1).std()
@@ -105,23 +194,60 @@ def moving_smooth_ts(ts, window_size: int = 20):
 
 def visualize_1D_lcurves(  # noqa: C901
     main_log: dict,
-    iter_to_plot: str = "num_episodes",
-    target_to_plot: Union[List[str], str] = "ep_reward",
+    iter_to_plot: str = "num_updates",
+    target_to_plot: Union[List[str], str] = "loss",
     smooth_window: int = 1,
     plot_title: Union[str, None] = None,
-    xy_labels: Union[list, None] = None,
+    xy_labels: Union[List[str], None] = None,
     base_label: str = "{}",
     curve_labels: list = [],
     every_nth_tick: Union[int, None] = None,
     plot_std_bar: bool = False,
-    run_ids: Union[None, list] = None,
+    run_ids: Union[None, List[str]] = None,
     rgb_tuples: Union[List[tuple], None] = None,
     num_legend_cols: Union[int, None] = 1,
-    fig=None,
+    fig: Union[matplotlib.figure.Figure, None] = None,
     ax=None,
     figsize: tuple = (9, 6),
-):
-    """Plot learning curves from meta_log. Select data and customize plot."""
+) -> tuple:
+    """Plot stats curves over time from meta_log. Select data and customize plot.
+
+    Args:
+        iter_to_plot (str, optional):
+            Time variable to plot in log `time`. Defaults to "num_updates".
+        target_to_plot (Union[List[str], str], optional):
+            Stats variable to plot in log `stats`. Defaults to "loss".
+        smooth_window (int, optional):
+            Time series moving average smoothing window. Defaults to 1.
+        plot_title (Union[str, None], optional):
+            Title for plot. Defaults to None.
+        xy_labels (Union[List[str], None], optional):
+            List of x & y plot labels. Defaults to None.
+        base_label (str, optional):
+            Base start of line labels. Defaults to "{}".
+        curve_labels (list, optional):
+            Explicit labels for individual lines. Defaults to [].
+        every_nth_tick (Union[int, None], optional):
+            Only plot every nth tick. Leave others out. Defaults to None.
+        plot_std_bar (bool, optional):
+            Whether to also plot standard deviation. Defaults to False.
+        run_ids (Union[None, List[str]], optional):
+            Explicit string id of runs to plot from log. Defaults to None.
+        rgb_tuples (Union[List[tuple], None], optional):
+            Color tuple to use in color palette. Defaults to None.
+        num_legend_cols (Union[int, None], optional):
+            Number of columns to split legend in. Defaults to 1.
+        fig (Union[matplotlib.figure.Figure, None], optional):
+            Matplotlib figure to modify. Defaults to None.
+        ax (Union[matplotlib.axes._subplots.AxesSubplot, None], optional):
+            Matplotlib axis to modify. Defaults to None.
+        figsize (tuple, optional):
+            Desired figure size. Defaults to (9, 6).
+
+    Returns:
+        Tuple[matplotlib.figure.Figure, matplotlib.axes._subplots.AxesSubplot]:
+            Modified matplotlib figure and axis.
+    """
     if fig is None or ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
@@ -176,14 +302,6 @@ def visualize_1D_lcurves(  # noqa: C901
     else:
         color_by = rgb_tuples
 
-    """
-    1. Single config - single seed = no aggregation possible
-    2. Single config - multi seed + aggregated
-    3. Single config - multi seed + non-aggregated
-    5. Multi config - single seed = no aggregation possible
-    5. Multi config - multi seed + aggregated
-    6. Multi config - multi seed + non-aggregated
-    """
     plot_counter = 0
     for i in range(len(run_ids)):
         run_id = run_ids[i]
@@ -193,11 +311,16 @@ def visualize_1D_lcurves(  # noqa: C901
                 label = curve_labels[plot_counter]
                 if (
                     type(log_to_plot[run_id][seed_id].stats[target]) == dict
-                    or type(log_to_plot[run_id][seed_id].stats[target]) == DotMap
+                    or type(log_to_plot[run_id][seed_id].stats[target])
+                    == DotMap
                 ):
                     plot_mean = True
-                    mean_to_plot = log_to_plot[run_id][seed_id].stats[target]["mean"]
-                    std_to_plot = log_to_plot[run_id][seed_id].stats[target]["std"]
+                    mean_to_plot = log_to_plot[run_id][seed_id].stats[target][
+                        "mean"
+                    ]
+                    std_to_plot = log_to_plot[run_id][seed_id].stats[target][
+                        "std"
+                    ]
                     smooth_std, _ = moving_smooth_ts(std_to_plot, smooth_window)
                 else:
                     plot_mean = False
@@ -254,12 +377,17 @@ def visualize_1D_lcurves(  # noqa: C901
     return fig, ax
 
 
-def tokenize(filename):
-    """Helper to sort the log files adequately."""
+def tokenize(filename: str):
+    """Helper to sort the log files alphanumerically.
+
+    Args:
+        filename (str): Name of run.
+    """
     digits = re.compile(r"(\d+)")
     return tuple(
         int(token) if match else token
         for token, match in (
-            (fragment, digits.search(fragment)) for fragment in digits.split(filename)
+            (fragment, digits.search(fragment))
+            for fragment in digits.split(filename)
         )
     )

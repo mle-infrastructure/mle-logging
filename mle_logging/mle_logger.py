@@ -74,7 +74,9 @@ class MLELogger(object):
         self.print_every_k_updates = print_every_k_updates
         self.log_save_counter = reload
         self.log_setup_counter = reload
-        self.seed_id = "seed_" + str(seed_id) if type(seed_id) == int else seed_id
+        self.seed_id = (
+            "seed_" + str(seed_id) if type(seed_id) == int else seed_id
+        )
         self.config_fname = config_fname
         self.config_dict = config_dict
 
@@ -171,7 +173,9 @@ class MLELogger(object):
             else:
                 # Don't redefine experiment directory but get already existing
                 exp_dir = [
-                    f for f in os.listdir(base_exp_dir) if f.endswith(self.base_str)
+                    f
+                    for f in os.listdir(base_exp_dir)
+                    if f.endswith(self.base_str)
                 ][0]
                 self.experiment_dir = os.path.join(base_exp_dir, exp_dir)
         else:
@@ -188,16 +192,23 @@ class MLELogger(object):
         # Delete old experiment logging directory
         if overwrite_experiment_dir and not reload:
             if os.path.exists(self.log_save_fname):
-                Console().log("Be careful - you are overwriting an existing log.")
+                Console().log(
+                    "Be careful - you are overwriting an existing log."
+                )
                 os.remove(self.log_save_fname)
             if os.path.exists(aggregated_log_save_fname):
                 Console().log(
-                    "Be careful - you are overwriting an existing aggregated log."
+                    "Be careful - you are overwriting an existing aggregated"
+                    " log."
                 )
                 os.remove(aggregated_log_save_fname)
             if self.use_tboard:
-                Console().log("Be careful - you are overwriting existing tboards.")
-                if os.path.exists(os.path.join(self.experiment_dir, "tboards/")):
+                Console().log(
+                    "Be careful - you are overwriting existing tboards."
+                )
+                if os.path.exists(
+                    os.path.join(self.experiment_dir, "tboards/")
+                ):
                     shutil.rmtree(os.path.join(self.experiment_dir, "tboards/"))
 
     def create_logging_dir(
@@ -215,12 +226,16 @@ class MLELogger(object):
             fext = ".yaml"
 
         if config_fname is not None:
-            config_copy = os.path.join(self.experiment_dir, self.base_str + fext)
+            config_copy = os.path.join(
+                self.experiment_dir, self.base_str + fext
+            )
             shutil.copy(config_fname, config_copy)
             self.config_copy = config_copy
             self.config_dict = load_config(config_fname)
         elif config_dict is not None:
-            config_copy = os.path.join(self.experiment_dir, "config_dict" + fext)
+            config_copy = os.path.join(
+                self.experiment_dir, "config_dict" + fext
+            )
             with open(config_copy, "w") as outfile:
                 yaml.dump(config_dict, outfile, default_flow_style=False)
             self.config_copy = config_copy
@@ -250,7 +265,11 @@ class MLELogger(object):
         # Update the tensorboard log with the newest event
         if self.use_tboard:
             self.tboard_log.update(
-                self.stats_log.time_to_track, clock_tick, stats_tick, model, plot_fig
+                self.stats_log.time_to_track,
+                clock_tick,
+                stats_tick,
+                model,
+                plot_fig,
             )
         # Save the most recent model checkpoint
         if model is not None:
@@ -267,7 +286,10 @@ class MLELogger(object):
 
         # Print the most current results
         if self.verbose and self.print_every_k_updates is not None:
-            if self.stats_log.stats_update_counter % self.print_every_k_updates == 0:
+            if (
+                self.stats_log.stats_update_counter % self.print_every_k_updates
+                == 0
+            ):
                 # Print storage paths generated/updated
                 print_storage(
                     fig_path=(
@@ -385,9 +407,14 @@ class MLELogger(object):
             ]
 
             for i in range(len(data_paths)):
-                write_to_hdf5(self.log_save_fname, data_paths[i], data_to_log[i])
+                write_to_hdf5(
+                    self.log_save_fname, data_paths[i], data_to_log[i]
+                )
 
-            if self.model_log.save_top_k_ckpt or self.model_log.save_every_k_ckpt:
+            if (
+                self.model_log.save_top_k_ckpt
+                or self.model_log.save_every_k_ckpt
+            ):
                 write_to_hdf5(
                     self.log_save_fname,
                     self.seed_id + "/meta/ckpt_time_to_track",
@@ -467,7 +494,10 @@ class MLELogger(object):
             data_types = ["int32", "S5000"]
             for i in range(len(data_paths)):
                 write_to_hdf5(
-                    self.log_save_fname, data_paths[i], data_to_log[i], data_types[i]
+                    self.log_save_fname,
+                    data_paths[i],
+                    data_to_log[i],
+                    data_types[i],
                 )
 
         #  Store data on stored checkpoints - stored top k ckpt
@@ -485,7 +515,10 @@ class MLELogger(object):
             data_types = ["int32", "S5000", "float32"]
             for i in range(len(data_paths)):
                 write_to_hdf5(
-                    self.log_save_fname, data_paths[i], data_to_log[i], data_types[i]
+                    self.log_save_fname,
+                    data_paths[i],
+                    data_to_log[i],
+                    data_types[i],
                 )
 
         # Tick the log save counter
@@ -500,4 +533,6 @@ class MLELogger(object):
         assert (
             self.log_every_j_steps is not None
         ), "Provide `log_every_j_steps` in your `log_config`"
-        return update_counter % self.log_every_j_steps == 0 or update_counter == 0
+        return (
+            update_counter + 1
+        ) % self.log_every_j_steps == 0 or update_counter == 0
