@@ -42,6 +42,7 @@ def merge_config_logs(experiment_dir: str, all_run_ids: list) -> None:
                 continue
     # Collect all paths to the .hdf5 file
     log_paths = []
+
     for i in range(len(hyperp_results_folder)):
         log_d_t = os.path.join(hyperp_results_folder[i], "logs/")
         for file in os.listdir(log_d_t):
@@ -52,5 +53,6 @@ def merge_config_logs(experiment_dir: str, all_run_ids: list) -> None:
 
     # Merge individual run results into a single hdf5 file
     assert len(log_paths) == len(all_run_ids)
+
     meta_log_fname = os.path.join(experiment_dir, "meta_log.hdf5")
     merge_hdf5_files(meta_log_fname, log_paths, file_ids=all_run_ids)

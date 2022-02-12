@@ -79,7 +79,9 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
         # Important aggregation helper & compute mean/median/10p/50p/etc.
         from ..merge.aggregate import aggregate_over_seeds
 
-        result_dict = aggregate_over_seeds(result_dict, batch_case=case_3 or case_4)
+        result_dict = aggregate_over_seeds(
+            result_dict, batch_case=case_3 or case_4
+        )
     return MetaLog(
         DotMap(result_dict, _dynamic=False),
         non_aggregated=(not aggregate_seeds and case_3),

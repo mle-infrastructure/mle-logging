@@ -35,7 +35,11 @@ class FigureLog(object):
         if fig_fname is None:
             figure_fname = os.path.join(
                 self.figures_dir,
-                "fig_" + str(self.fig_save_counter) + "_" + str(self.seed_id) + ".png",
+                "fig_"
+                + str(self.fig_save_counter)
+                + "_"
+                + str(self.seed_id)
+                + ".png",
             )
         else:
             self.fig_save_counter -= 1
@@ -43,6 +47,12 @@ class FigureLog(object):
                 self.figures_dir,
                 fig_fname,
             )
+
+            # Create all subfolders if needed!
+        try:
+            os.makedirs(os.path.dirname(figure_fname), exist_ok=True)
+        except Exception:
+            pass
 
         fig.savefig(figure_fname, dpi=300)
         self.fig_storage_paths.append(figure_fname)

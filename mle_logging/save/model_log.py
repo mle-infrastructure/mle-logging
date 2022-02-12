@@ -55,7 +55,9 @@ class ModelLog(object):
         self.init_model_saved = False
         if self.save_every_k_ckpt is not None:
             self.every_k_ckpt_list: List[str] = []
-            self.every_k_dir = os.path.join(self.experiment_dir, "models/every_k/")
+            self.every_k_dir = os.path.join(
+                self.experiment_dir, "models/every_k/"
+            )
             self.every_k_model_save_fname = os.path.join(
                 self.every_k_dir, "every_k_" + seed_id + "_k_"
             )
@@ -67,7 +69,13 @@ class ModelLog(object):
             )
 
         # Different extensions to model checkpoints based on model type
-        if self.model_type in ["torch", "tensorflow", "jax", "sklearn", "numpy"]:
+        if self.model_type in [
+            "torch",
+            "tensorflow",
+            "jax",
+            "sklearn",
+            "numpy",
+        ]:
             if self.model_type in ["torch", "tensorflow"]:
                 self.model_fname_ext = ".pt"
             elif self.model_type in ["jax", "sklearn", "numpy"]:
@@ -94,7 +102,9 @@ class ModelLog(object):
         if self.save_top_k_ckpt is not None:
             os.makedirs(self.top_k_dir, exist_ok=True)
 
-    def save(self, model, clock_tracked: dict, stats_tracked: dict):  # noqa: C901
+    def save(
+        self, model, clock_tracked: dict, stats_tracked: dict
+    ):  # noqa: C901
         """Save current state of the model as a checkpoint."""
         # If first model ckpt is saved - generate necessary directories
         self.model_save_counter += 1
@@ -174,7 +184,9 @@ class ModelLog(object):
             self.top_k_performance[id_to_replace] = score
             self.top_k_storage_time[id_to_replace] = time
             ckpt_path = (
-                self.top_k_model_save_fname + str(id_to_replace) + self.model_fname_ext
+                self.top_k_model_save_fname
+                + str(id_to_replace)
+                + self.model_fname_ext
             )
             save_model_ckpt(model, ckpt_path, self.model_type)
             self.stored_top_k = True
@@ -191,7 +203,9 @@ class ModelLog(object):
         # Reload counter & lists for top k scores and storage time to track
         if self.save_every_k_ckpt is not None:
             if type(meta_data.every_k_ckpt_list) == list:
-                self.every_k_ckpt_list = [ck for ck in meta_data.every_k_ckpt_list]
+                self.every_k_ckpt_list = [
+                    ck for ck in meta_data.every_k_ckpt_list
+                ]
                 self.every_k_storage_time = meta_data.every_k_storage_time
             else:
                 self.every_k_ckpt_list = [meta_data.every_k_ckpt_list]
@@ -219,7 +233,9 @@ def save_model_ckpt(model, model_save_fname: str, model_type: str) -> None:
         # JAX/sklearn save parameter dict/model as dictionary
         save_pkl_object(model, model_save_fname)
     else:
-        raise ValueError("Provide valid model_type [torch, jax, sklearn, numpy].")
+        raise ValueError(
+            "Provide valid model_type [torch, jax, sklearn, numpy]."
+        )
 
 
 def save_torch_model(path_to_store: str, model) -> None:

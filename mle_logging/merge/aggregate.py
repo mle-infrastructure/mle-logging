@@ -3,7 +3,9 @@ import numpy as np
 from typing import List, Tuple, Any
 
 
-def aggregate_over_seeds(result_dict: DotMap, batch_case: bool = False) -> DotMap:
+def aggregate_over_seeds(
+    result_dict: DotMap, batch_case: bool = False
+) -> DotMap:
     """Mean all individual runs over their respective seeds.
     BATCH EVAL CASE:
     IN: {'b_1_eval_0': {'seed_0': {'meta': {}, 'stats': {}, 'time': {}}
@@ -56,7 +58,9 @@ def aggregate_single_eval(  # noqa: C901
         if ds in ["time"]:
             aggregate_dict = {key: {} for key in data_items[ds]}
             for i, o_name in enumerate(data_items[ds]):
-                aggregate_dict[o_name] = new_results_dict[eval_name][ds][o_name][0]
+                aggregate_dict[o_name] = new_results_dict[eval_name][ds][
+                    o_name
+                ][0]
         # Mean over stats data
         elif ds in ["stats"]:
             aggregate_dict = {key: {} for key in data_items[ds]}
@@ -84,16 +88,17 @@ def aggregate_single_eval(  # noqa: C901
                     aggregate_dict[o_name]["p75"] = p75
                     aggregate_dict[o_name]["p90"] = p90
                 else:
-                    aggregate_dict[o_name] = new_results_dict[eval_name][ds][o_name]
+                    aggregate_dict[o_name] = new_results_dict[eval_name][ds][
+                        o_name
+                    ]
         # Append over all meta data (strings, seeds nothing to mean)
         elif ds == "meta":
             aggregate_dict = {}
             for i, o_name in enumerate(data_items[ds]):
-                temp = (
-                    np.array(new_results_dict[eval_name][ds][o_name])
-                    .squeeze()
-                    .astype("U5000")
-                )
+                temp = np.array(
+                    new_results_dict[eval_name][ds][o_name],
+                    dtype=object,
+                ).squeeze()
                 # Get rid of duplicate experiment dir strings
                 if o_name in [
                     "experiment_dir",
@@ -107,7 +112,9 @@ def aggregate_single_eval(  # noqa: C901
                     aggregate_dict[o_name] = temp
 
             # Add seeds as clean array of integers to dict
-            aggregate_dict["seeds"] = [int(s.split("_")[1]) for s in all_seeds_for_run]
+            aggregate_dict["seeds"] = [
+                int(s.split("_")[1]) for s in all_seeds_for_run
+            ]
         else:
             raise ValueError
         aggregate_sources[ds] = aggregate_dict
@@ -121,7 +128,9 @@ def aggregate_batch_evals(result_dict: dict, all_runs: list) -> dict:
     new_results_dict = {}
     for eval in all_runs:
         all_seeds_for_run = list(result_dict[eval].keys())
-        eval_dict = aggregate_single_eval(result_dict[eval], all_seeds_for_run, eval)
+        eval_dict = aggregate_single_eval(
+            result_dict[eval], all_seeds_for_run, eval
+        )
         new_results_dict[eval] = eval_dict[eval]
     return new_results_dict
 

@@ -49,6 +49,12 @@ class ExtraLog(object):
                 obj_fname,
             )
 
+        # Create all subfolders if needed!
+        try:
+            os.makedirs(os.path.dirname(obj_fname), exist_ok=True)
+        except Exception:
+            pass
+
         save_pkl_object(obj, obj_fname)
         self.extra_storage_paths.append(obj_fname)
 
