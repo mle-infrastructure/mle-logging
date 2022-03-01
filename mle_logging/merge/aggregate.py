@@ -99,6 +99,7 @@ def aggregate_single_eval(  # noqa: C901
                     new_results_dict[eval_name][ds][o_name],
                     dtype=object,
                 ).squeeze()
+
                 # Get rid of duplicate experiment dir strings
                 if o_name in [
                     "experiment_dir",
@@ -107,7 +108,7 @@ def aggregate_single_eval(  # noqa: C901
                     "model_type",
                     "config_dict",
                 ]:
-                    aggregate_dict[o_name] = str(np.unique(temp)[0])
+                    aggregate_dict[o_name] = np.unique(temp)[0].decode()
                 else:
                     aggregate_dict[o_name] = temp
 

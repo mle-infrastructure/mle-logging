@@ -5,14 +5,20 @@ from .utils import visualize_1D_lcurves
 
 
 class MetaLog(object):
-    """Class wrapper for meta_log dictionary w. additional functionality."""
-
     meta_vars: List[str]
     stats_vars: List[str]
     time_vars: List[str]
     num_configs: int
 
     def __init__(self, meta_log: DotMap, non_aggregated: bool = False):
+        """Class wrapper for meta_log dictionary w. additional functionality.
+
+        Args:
+            meta_log (DotMap): Raw reloaded meta-log dotmap dictionary.
+            non_aggregated (bool, optional):
+                Whether the meta-log has previously been aggregated across
+                seeds. Defaults to False.
+        """
         self.meta_log = meta_log
 
         # Return shallow log if there is only a single experiment stored
@@ -33,7 +39,9 @@ class MetaLog(object):
         # Decode all byte strings in meta data
         for run_id in self.meta_log.keys():
             if "meta" in self.meta_log[run_id].keys():
-                self.meta_log[run_id] = decode_meta_strings(self.meta_log[run_id])
+                self.meta_log[run_id] = decode_meta_strings(
+                    self.meta_log[run_id]
+                )
             else:
                 for seed_id in self.meta_log[run_id].keys():
                     self.meta_log[run_id][seed_id] = decode_meta_strings(
@@ -69,7 +77,7 @@ class MetaLog(object):
         fig=None,
         ax=None,
         figsize: tuple = (9, 6),
-    ) -> None:
+    ):
         """Plot all runs in meta-log for variable 'target_to_plot'."""
         if iter_to_plot is None:
             iter_to_plot = self.time_vars[0]
@@ -102,8 +110,8 @@ class MetaLog(object):
         """Get ids of runs stored in meta_log instance."""
         if self.num_configs > 1:
             return list(self.meta_log.keys())
-        # else:
-        #     print("Only single aggregated configuration or random seed loaded.")
+        else:
+            print("Only single aggregated configuration or random seed loaded.")
 
     def __len__(self) -> int:
         """Return number of runs stored in meta_log."""
@@ -128,9 +136,12 @@ def decode_meta_strings(log: DotMap):
         temp_list = []
         if type(log.meta[k]) != str:
             list_to_loop = (
-                log.meta[k].tolist() if type(log.meta[k]) != list else log.meta[k]
+                log.meta[k].tolist()
+                if type(log.meta[k]) != list
+                else log.meta[k]
             )
-            if type(list_to_loop) == str:
+
+            if type(list_to_loop) in [str, bytes]:
                 list_to_loop = [list_to_loop]
             for i in list_to_loop:
                 if type(i) == bytes:
@@ -140,6 +151,7 @@ def decode_meta_strings(log: DotMap):
                     temp_list.append(i)
         else:
             temp_list.append(log.meta[k])
+
         if len(temp_list) == 1:
             if k == "config_dict":
                 # Convert config into dict
@@ -149,4 +161,5 @@ def decode_meta_strings(log: DotMap):
                 log.meta[k] = temp_list[0]
         else:
             log.meta[k] = temp_list
+
     return log

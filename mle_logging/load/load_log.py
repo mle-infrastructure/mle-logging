@@ -29,7 +29,7 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
     ) == collections.Counter(data_types)
     case_2 = len(run_names) == 1 and collections.Counter(
         h5f[run_names[0]].keys()
-    ) == collections.Counter(data_types)
+    ) != collections.Counter(data_types)
     case_3 = len(run_names) > 1 and collections.Counter(
         h5f[run_names[0]].keys()
     ) != collections.Counter(data_types)
@@ -82,6 +82,7 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
         result_dict = aggregate_over_seeds(
             result_dict, batch_case=case_3 or case_4
         )
+
     return MetaLog(
         DotMap(result_dict, _dynamic=False),
         non_aggregated=(not aggregate_seeds and case_3),
