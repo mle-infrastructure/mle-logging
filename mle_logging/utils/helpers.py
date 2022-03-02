@@ -193,7 +193,7 @@ def visualize_1D_lcurves(  # noqa: C901
     run_ids: Union[None, List[str]] = None,
     rgb_tuples: Union[List[tuple], None] = None,
     num_legend_cols: Union[int, None] = 1,
-    fig: Union[matplotlib.figure.Figure, None] = None,
+    fig=None,
     ax=None,
     figsize: tuple = (9, 6),
 ) -> tuple:
@@ -237,7 +237,6 @@ def visualize_1D_lcurves(  # noqa: C901
     """
 
     try:
-        import matplotlib
         import matplotlib.pyplot as plt
         import seaborn as sns
 
