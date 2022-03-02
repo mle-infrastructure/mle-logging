@@ -42,7 +42,7 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
 
     result_dict = {key: {} for key in run_names}
     # Shallow versus deep aggregation
-    if case_1 or case_2 or case_5:
+    if case_1 or case_5:
         data_items = {
             data_types[i]: list(h5f[run_names[0]][data_types[i]].keys())
             for i in range(len(data_types))
@@ -56,7 +56,7 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
                     data_to_store[o_name] = run[ds][o_name][:]
                 source_to_store[ds] = data_to_store
             result_dict[rn] = source_to_store
-    elif case_3 or case_4:
+    elif case_2 or case_3 or case_4:
         data_items = {
             data_types[i]: list(
                 h5f[run_names[0]][data_sources[0]][data_types[i]].keys()

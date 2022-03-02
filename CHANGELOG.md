@@ -7,9 +7,12 @@
 
 ### Changed
 
+- Changes and reduces requirements
+
 ### Fixed
 
-- Fix different data types issues (#3)
+- Fixes different data types issues (#3)
+- Fixes string decoding and merging for `MetaLog`
 
 ## [v0.0.4] - [12/07/2021]
 

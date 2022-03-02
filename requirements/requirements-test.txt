@@ -1,0 +1,9 @@
+matplotlib
+seaborn
+torch
+tensorboard
+tensorflow
+dm-haiku
+sklearn
+jax
+jaxlib

@@ -3,9 +3,5 @@ pyyaml>=5.1
 numpy
 h5py
 dotmap
-matplotlib
-seaborn
-torch
-tensorboard
 pickle5
 rich

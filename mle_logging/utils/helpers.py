@@ -7,22 +7,9 @@ import yaml
 import commentjson
 import numpy as np
 import pandas as pd
-import matplotlib
-import matplotlib.pyplot as plt
 import re
 from dotmap import DotMap
 import collections
-import seaborn as sns
-
-sns.set(
-    context="poster",
-    style="white",
-    palette="Paired",
-    font="sans-serif",
-    font_scale=1.0,
-    color_codes=True,
-    rc=None,
-)
 
 
 def save_pkl_object(obj: Any, filename: str) -> None:
@@ -248,6 +235,27 @@ def visualize_1D_lcurves(  # noqa: C901
         Tuple[matplotlib.figure.Figure, matplotlib.axes._subplots.AxesSubplot]:
             Modified matplotlib figure and axis.
     """
+
+    try:
+        import matplotlib
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+
+        sns.set(
+            context="poster",
+            style="white",
+            palette="Paired",
+            font="sans-serif",
+            font_scale=1.0,
+            color_codes=True,
+            rc=None,
+        )
+    except ImportError:
+        raise ImportError(
+            "You need to install `matplotlib` & `seaborn` to use `mle-logging`"
+            " visualization utilities."
+        )
+
     if fig is None or ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
