@@ -1,6 +1,5 @@
 import os
-import pickle
-import pickle5
+import sys
 from typing import Any, Union, List, Tuple
 import h5py
 import yaml
@@ -10,6 +9,12 @@ import pandas as pd
 import re
 from dotmap import DotMap
 import collections
+
+if sys.version_info < (3, 8):
+    # Load with pickle5 for python version compatibility
+    import pickle5 as pickle
+else:
+    import pickle
 
 
 def save_pkl_object(obj: Any, filename: str) -> None:
@@ -34,8 +39,7 @@ def load_pkl_object(filename: str) -> Any:
         Any: Reloaded object.
     """
     with open(filename, "rb") as input:
-        # Load with pickle5 for python version compatibility
-        obj = pickle5.load(input)
+        obj = pickle.load(input)
     return obj
 
 
