@@ -2,7 +2,7 @@ import numpy as np
 import os
 import shutil
 import yaml
-from typing import Union, List, Dict
+from typing import Optional, Union, List, Dict
 from rich.console import Console
 from .utils import (
     write_to_hdf5,
@@ -13,7 +13,7 @@ from .utils import (
     print_reload,
     print_storage,
 )
-from .save import StatsLog, TboardLog, ModelLog, FigureLog, ExtraLog
+from .save import StatsLog, TboardLog, WandbLog, ModelLog, FigureLog, ExtraLog
 
 
 class MLELogger(object):
@@ -34,6 +34,7 @@ class MLELogger(object):
         overwrite (bool): delete old log file/tboard dir
         ======= VERBOSITY/TBOARD LOGGING
         use_tboard (bool): whether to log to tensorboard
+        use_wandb (bool): whether to log to wandb
         log_every_j_steps (int): steps between log updates
         print_every_k_updates (int): after how many log updates - verbose
         ======= MODEL STORAGE
@@ -50,26 +51,29 @@ class MLELogger(object):
         experiment_dir: str = "/",
         time_to_track: List[str] = [],
         what_to_track: List[str] = [],
-        time_to_print: Union[List[str], None] = None,
-        what_to_print: Union[List[str], None] = None,
-        config_fname: Union[str, None] = None,
-        config_dict: Union[dict, None] = None,
+        time_to_print: Optional[List[str]] = None,
+        what_to_print: Optional[List[str]] = None,
+        config_fname: Optional[str] = None,
+        config_dict: Optional[dict] = None,
         seed_id: Union[str, int] = "no_seed_provided",
         overwrite: bool = False,
         use_tboard: bool = False,
-        log_every_j_steps: Union[int, None] = None,
-        print_every_k_updates: Union[int, None] = 1,
+        use_wandb: bool = False,
+        wandb_config: Optional[dict] = None,
+        log_every_j_steps: Optional[int] = None,
+        print_every_k_updates: Optional[int] = 1,
         model_type: str = "no-model-type",
-        ckpt_time_to_track: Union[str, None] = None,
-        save_every_k_ckpt: Union[int, None] = None,
-        save_top_k_ckpt: Union[int, None] = None,
-        top_k_metric_name: Union[str, None] = None,
-        top_k_minimize_metric: Union[bool, None] = None,
+        ckpt_time_to_track: Optional[str] = None,
+        save_every_k_ckpt: Optional[int] = None,
+        save_top_k_ckpt: Optional[int] = None,
+        top_k_metric_name: Optional[str] = None,
+        top_k_minimize_metric: Optional[bool] = None,
         reload: bool = False,
         verbose: bool = False,
     ):
         # Set up tensorboard when/where to log and when to print
         self.use_tboard = use_tboard
+        self.use_wandb = use_wandb
         self.log_every_j_steps = log_every_j_steps
         self.print_every_k_updates = print_every_k_updates
         self.log_save_counter = reload
@@ -102,6 +106,8 @@ class MLELogger(object):
                 self.experiment_dir,
                 self.seed_id,
             )
+        if self.use_wandb:
+            self.wandb_log = WandbLog(wandb_config)
 
         # MODEL, FIGURE & EXTRA LOGGING SETUP
         self.model_log = ModelLog(
@@ -156,7 +162,7 @@ class MLELogger(object):
                 self.experiment_dir,
             )
 
-    def setup_experiment(  # noqa: C901
+    def setup_experiment(
         self,
         base_exp_dir: str,
         config_fname: Union[str, None],
@@ -223,7 +229,7 @@ class MLELogger(object):
         if config_fname is not None:
             fname, fext = os.path.splitext(config_fname)
         else:
-            fext = ".yaml"
+            fname, fext = "pholder", ".yaml"
 
         if config_fname is not None:
             config_copy = os.path.join(
@@ -246,6 +252,10 @@ class MLELogger(object):
 
         # Create .hdf5 logging sub-directory
         os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
+
+        # Setup wandb logging with config dict
+        if self.use_wandb:
+            self.wandb_log.setup(config_dict, fname, self.seed_id)
 
     def update(
         self,
@@ -271,6 +281,15 @@ class MLELogger(object):
                 self.stats_log.time_to_track,
                 clock_tick,
                 stats_tick,
+                self.model_log.model_type,
+                model,
+                plot_fig,
+            )
+        if self.use_wandb:
+            self.wandb_log.update(
+                clock_tick,
+                stats_tick,
+                self.model_log.model_type,
                 model,
                 plot_fig,
             )
