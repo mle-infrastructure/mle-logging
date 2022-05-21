@@ -196,6 +196,9 @@ def visualize_1D_lcurves(  # noqa: C901
     fig=None,
     ax=None,
     figsize: tuple = (9, 6),
+    plot_labels: bool = True,
+    legend_title: Union[None, str] = None,
+    ax_lims: Union[None, list] = None,
 ) -> tuple:
     """Plot stats curves over time from meta_log. Select data and customize plot.
 
@@ -230,6 +233,12 @@ def visualize_1D_lcurves(  # noqa: C901
             Matplotlib axis to modify. Defaults to None.
         figsize (tuple, optional):
             Desired figure size. Defaults to (9, 6).
+        plot_labels (bool):
+            Whether to plot curve labels
+        legend_title (str, optional):
+            Title of legend. Defaults to None.
+        ax_lims (list, optional):
+            Max/min axis range. Defaults to None.
 
     Returns:
         Tuple[matplotlib.figure.Figure, matplotlib.axes._subplots.AxesSubplot]:
@@ -367,12 +376,19 @@ def visualize_1D_lcurves(  # noqa: C901
         ax.set_xticks(range_x)
         ax.set_xticklabels([str(int(label)) for label in range_x])
 
-    if len(run_ids) < 20 and len(curve_labels) > 1:
-        ax.legend(fontsize=15, ncol=num_legend_cols)
-    # ax.set_ylim(0, 0.35)
+    if len(curve_labels) > 1 and plot_labels:
+        if legend_title is None:
+            ax.legend(fontsize=7, ncol=num_legend_cols)
+        else:
+            lg = ax.legend(fontsize=7, ncol=num_legend_cols, title=legend_title)
+            title = lg.get_title()
+            title.set_fontsize(10)
+
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
+    if ax_lims is not None:
+        ax.set_ylim(ax_lims)
     if plot_title is None:
         plot_title = ", ".join(target_to_plot)
     ax.set_title(plot_title)

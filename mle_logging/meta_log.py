@@ -69,6 +69,7 @@ class MetaLog(object):
         plot_title: Union[str, None] = None,
         xy_labels: Union[list, None] = None,
         base_label: str = "{}",
+        run_ids: Union[list, None] = None,
         curve_labels: list = [],
         every_nth_tick: Union[int, None] = None,
         plot_std_bar: bool = False,
@@ -77,11 +78,16 @@ class MetaLog(object):
         fig=None,
         ax=None,
         figsize: tuple = (9, 6),
+        plot_labels: bool = True,
+        legend_title: Union[None, str] = None,
+        ax_lims: Union[None, list] = None,
     ):
         """Plot all runs in meta-log for variable 'target_to_plot'."""
         if iter_to_plot is None:
             iter_to_plot = self.time_vars[0]
         assert iter_to_plot in self.time_vars
+        if run_ids is None:
+            run_ids = self.eval_ids
         fig, ax = visualize_1D_lcurves(
             self.meta_log,
             iter_to_plot,
@@ -89,7 +95,7 @@ class MetaLog(object):
             smooth_window=smooth_window,
             every_nth_tick=every_nth_tick,
             num_legend_cols=num_legend_cols,
-            run_ids=self.eval_ids,
+            run_ids=run_ids,
             plot_title=plot_title,
             xy_labels=xy_labels,
             base_label=base_label,
@@ -98,6 +104,9 @@ class MetaLog(object):
             fig=fig,
             ax=ax,
             figsize=figsize,
+            plot_labels=plot_labels,
+            legend_title=legend_title,
+            ax_lims=ax_lims,
         )
         # Save the figure if a filename was provided
         if fname is not None:

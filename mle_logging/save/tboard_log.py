@@ -23,7 +23,7 @@ class TboardLog(object):
             experiment_dir + "/tboards/" + "tboard" + "_" + seed_id
         )
 
-    def update(  # noqa: C901
+    def update(
         self,
         time_to_track: list,
         clock_tick: Dict[str, int],
@@ -47,7 +47,9 @@ class TboardLog(object):
             if model_type == "torch":
                 for name, param in model.named_parameters():
                     self.writer.add_histogram(
-                        "weights/" + name, param.clone().cpu().data.numpy(), time_var_id
+                        "weights/" + name,
+                        param.clone().cpu().data.numpy(),
+                        time_var_id,
                     )
                     # Try getting gradients from torch model
                     try:
@@ -70,7 +72,9 @@ class TboardLog(object):
                             )
                     except Exception:
                         self.writer.add_histogram(
-                            "weights/" + layer, np.array(model[layer]), time_var_id
+                            "weights/" + layer,
+                            np.array(model[layer]),
+                            time_var_id,
                         )
 
         # Add the plot of interest to tboard

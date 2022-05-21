@@ -258,7 +258,10 @@ class MLELogger(object):
     ) -> None:
         """Update with the newest tick of performance stats, net weights"""
         # Make sure that timeseries data consists of floats
-        stats_tick = {key: float(value) for (key, value) in stats_tick.items()}
+        stats_tick = {
+            key: float(value) if type(value) != np.ndarray else value
+            for (key, value) in stats_tick.items()
+        }
 
         # Update the stats log with newest timeseries data
         c_tick, s_tick = self.stats_log.update(clock_tick, stats_tick)
