@@ -3,5 +3,5 @@ pyyaml>=5.1
 numpy
 h5py
 dotmap
-pickle5
+pickle5; python_version < '3.8'
 rich
