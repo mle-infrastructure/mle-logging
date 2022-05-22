@@ -84,6 +84,8 @@ class MLELogger(object):
         self.config_fname = config_fname
         self.config_dict = config_dict
 
+        self.get_configs_ready(self.config_fname, self.config_dict)
+
         # Set up the logging directories - copy timestamped config file
         self.setup_experiment(
             experiment_dir,
@@ -107,7 +109,9 @@ class MLELogger(object):
                 self.seed_id,
             )
         if self.use_wandb:
-            self.wandb_log = WandbLog(wandb_config)
+            self.wandb_log = WandbLog(
+                self.config_dict, self.config_fname, self.seed_id, wandb_config
+            )
 
         # MODEL, FIGURE & EXTRA LOGGING SETUP
         self.model_log = ModelLog(
@@ -217,6 +221,17 @@ class MLELogger(object):
                 ):
                     shutil.rmtree(os.path.join(self.experiment_dir, "tboards/"))
 
+    def get_configs_ready(
+        self, config_fname: Union[str, None], config_dict: Union[dict, None]
+    ):
+        """Load configuration if provided and set config_dict."""
+        if config_fname is not None:
+            self.config_dict = load_config(config_fname)
+        elif config_dict is not None:
+            self.config_dict = config_dict
+        else:
+            self.config_dict = {}
+
     def create_logging_dir(
         self,
         config_fname: Union[str, None],
@@ -237,7 +252,6 @@ class MLELogger(object):
             )
             shutil.copy(config_fname, config_copy)
             self.config_copy = config_copy
-            self.config_dict = load_config(config_fname)
         elif config_dict is not None:
             config_copy = os.path.join(
                 self.experiment_dir, "config_dict" + fext
@@ -245,17 +259,11 @@ class MLELogger(object):
             with open(config_copy, "w") as outfile:
                 yaml.dump(config_dict, outfile, default_flow_style=False)
             self.config_copy = config_copy
-            self.config_dict = config_dict
         else:
             self.config_copy = "config-not-provided"
-            self.config_dict = {}
 
         # Create .hdf5 logging sub-directory
         os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
-
-        # Setup wandb logging with config dict
-        if self.use_wandb:
-            self.wandb_log.setup(config_dict, fname, self.seed_id)
 
     def update(
         self,
