@@ -30,6 +30,7 @@ class TboardLog(object):
         stats_tick: Dict[str, float],
         model_type: str,
         model=None,
+        grads=None,
         plot_to_tboard=None,
     ):
         """Update the tensorboard with the newest events"""

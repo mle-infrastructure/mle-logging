@@ -184,8 +184,8 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
                 what_to_track=['train_loss', 'test_loss'],
                 use_wandb=True,
                 wandb_config={
-                  "key": "sadfasd"  # Only needed if not logged in
-                  "entity": "roberttlange",
+                  "key": "sadfasd",  # Only needed if not logged in
+                  "entity": "roberttlange",  # Only needed if not logged in
                   "project": "some-project-name",
                   "group": "some-group-name"
                 })

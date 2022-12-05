@@ -71,6 +71,8 @@ class MLELogger(object):
         reload: bool = False,
         verbose: bool = False,
     ):
+        # Set os hdf file to non locking mode
+        os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
         # Set up tensorboard when/where to log and when to print
         self.use_tboard = use_tboard
         self.use_wandb = use_wandb
@@ -270,6 +272,7 @@ class MLELogger(object):
         clock_tick: Dict[str, int],
         stats_tick: Dict[str, float],
         model=None,
+        grads=None,
         plot_fig=None,
         extra_obj=None,
         save=False,
@@ -291,6 +294,7 @@ class MLELogger(object):
                 stats_tick,
                 self.model_log.model_type,
                 model,
+                grads,
                 plot_fig,
             )
         if self.use_wandb:
@@ -299,6 +303,7 @@ class MLELogger(object):
                 stats_tick,
                 self.model_log.model_type,
                 model,
+                grads,
                 plot_fig,
             )
         # Save the most recent model checkpoint
@@ -362,7 +367,7 @@ class MLELogger(object):
                 if self.what_to_print is None:
                     what_to_p = self.stats_log.what_to_track
                 else:
-                    what_to_p = []
+                    what_to_p = self.what_to_print
                 print_update(
                     time_to_p,
                     what_to_p,
@@ -493,23 +498,24 @@ class MLELogger(object):
         for o_name in self.stats_log.what_to_track:
             data_to_store = self.stats_log.stats_tracked[o_name]
             data_to_store = np.array(data_to_store)
-            if type(data_to_store[0]) == np.ndarray:
-                data_to_store = np.stack(data_to_store)
-                dtype = np.dtype("float32")
-            if type(data_to_store[0]) in [np.str_, str]:
-                dtype = "S5000"
-            if type(data_to_store[0]) in [bytes, np.str_]:
-                dtype = np.dtype("S5000")
-            elif type(data_to_store[0]) == int:
-                dtype = np.dtype("int32")
-            else:
-                dtype = np.dtype("float32")
-            write_to_hdf5(
-                self.log_save_fname,
-                self.seed_id + "/stats/" + o_name,
-                data_to_store,
-                dtype,
-            )
+            if len(data_to_store) > 0:
+                if type(data_to_store[0]) == np.ndarray:
+                    data_to_store = np.stack(data_to_store)
+                    dtype = np.dtype("float32")
+                if type(data_to_store[0]) in [np.str_, str]:
+                    dtype = "S5000"
+                if type(data_to_store[0]) in [bytes, np.str_]:
+                    dtype = np.dtype("S5000")
+                elif type(data_to_store[0]) == int:
+                    dtype = np.dtype("int32")
+                else:
+                    dtype = np.dtype("float32")
+                write_to_hdf5(
+                    self.log_save_fname,
+                    self.seed_id + "/stats/" + o_name,
+                    data_to_store,
+                    dtype,
+                )
 
         # Store data on stored checkpoints - stored every k updates
         if self.model_log.save_every_k_ckpt is not None:

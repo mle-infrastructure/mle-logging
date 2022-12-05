@@ -67,10 +67,10 @@ class WandbLog(object):
         """Setup wandb process for logging."""
         if self.wandb_config["group"] is None:
             self.wandb_config["job_type"] = seed_id
-            self.wandb_config["name"] = "{}-{}".format(config_fname, seed_id)
         else:
             self.wandb_config["job_type"] = config_fname
-            self.wandb_config["name"] = seed_id
+        if self.wandb_config["name"] is None:
+            self.wandb_config["name"] = "{}-{}".format(config_fname, seed_id)
         setup_wandb_env(self.wandb_config)
         wandb.init(config=config_dict)
         self.step_counter = 0
@@ -81,14 +81,65 @@ class WandbLog(object):
         stats_tick: Dict[str, float],
         model_type: Optional[str] = None,
         model=None,
+        grads=None,
         plot_to_wandb: Optional[str] = None,
     ):
         """Update the wandb with the newest events"""
-        log_dict = {**stats_tick, **clock_tick}
+        log_dict = {}
+        for k, v in clock_tick.items():
+            log_dict["time/" + k] = v
+        for k, v in stats_tick.items():
+            log_dict["stats/" + k] = v
         if plot_to_wandb is not None:
             log_dict["img"] = wandb.Image(plot_to_wandb)
+        # Log stats to W&B log
         wandb.log(
             log_dict,
             step=self.step_counter,
         )
+
+        # Log model parameters and gradients if provided
+        if model is not None and model_type == "jax":
+            w_norm, w_hist = get_jax_norm_hist(model)
+            wandb.log(
+                {"params_norm/": w_norm, "params_hist/": w_hist},
+                step=self.step_counter,
+            )
+        if grads is not None and model_type == "jax":
+            g_norm, g_hist = get_jax_norm_hist(grads)
+            wandb.log(
+                {"grads_norm/": g_norm, "grads_hist/": g_hist},
+                step=self.step_counter,
+            )
+        # Log model gradients if provided
         self.step_counter += 1
+
+    def upload_gif(self, gif_path: str, video_name: Optional[str] = "video"):
+        """Upload a gif file to W&B based on path"""
+        wandb.log(
+            {"video_name": wandb.Video(gif_path)},
+            step=self.step_counter,
+        )
+
+
+def get_jax_norm_hist(model):
+    """Get norm of modules in jax model."""
+    import jax
+    import jax.numpy as jnp
+    from flax.core import unfreeze
+
+    def norm(val):
+        return jax.tree_map(lambda x: jnp.linalg.norm(x), val)
+
+    def histogram(val):
+        return jax.tree_map(lambda x: jnp.histogram(x, density=True), val)
+
+    w_norm = unfreeze(norm(model))
+    hist = histogram(model)
+    hist = jax.tree_map(lambda x: jax.device_get(x), unfreeze(hist))
+    w_hist = jax.tree_map(
+        lambda x: wandb.Histogram(np_histogram=x),
+        hist,
+        is_leaf=lambda x: isinstance(x, tuple),
+    )
+    return w_norm, w_hist
