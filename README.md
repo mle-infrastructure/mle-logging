@@ -173,6 +173,24 @@ log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
                 top_k_minimize_metric=True)
 ```
 
+
+### Weights&Biases Backend Integration 🧑‍🎨
+
+You can also use W&B as a backend for logging. All results are stored as before but additionally we report to the W&B server:
+
+```python
+# Provide all configuration details as option
+log = MLELogger(time_to_track=['num_updates', 'num_epochs'],
+                what_to_track=['train_loss', 'test_loss'],
+                use_wandb=True,
+                wandb_config={
+                  "key": "sadfasd",  # Only needed if not logged in
+                  "entity": "roberttlange",  # Only needed if not logged in
+                  "project": "some-project-name",
+                  "group": "some-group-name"
+                })
+```
+
 ### Citing the MLE-Infrastructure ✏️
 
 If you use `mle-logging` in your research, please cite it as follows:

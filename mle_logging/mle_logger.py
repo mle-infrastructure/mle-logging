@@ -2,7 +2,7 @@ import numpy as np
 import os
 import shutil
 import yaml
-from typing import Union, List, Dict
+from typing import Optional, Union, List, Dict
 from rich.console import Console
 from .utils import (
     write_to_hdf5,
@@ -13,7 +13,7 @@ from .utils import (
     print_reload,
     print_storage,
 )
-from .save import StatsLog, TboardLog, ModelLog, FigureLog, ExtraLog
+from .save import StatsLog, TboardLog, WandbLog, ModelLog, FigureLog, ExtraLog
 
 
 class MLELogger(object):
@@ -34,6 +34,7 @@ class MLELogger(object):
         overwrite (bool): delete old log file/tboard dir
         ======= VERBOSITY/TBOARD LOGGING
         use_tboard (bool): whether to log to tensorboard
+        use_wandb (bool): whether to log to wandb
         log_every_j_steps (int): steps between log updates
         print_every_k_updates (int): after how many log updates - verbose
         ======= MODEL STORAGE
@@ -50,26 +51,31 @@ class MLELogger(object):
         experiment_dir: str = "/",
         time_to_track: List[str] = [],
         what_to_track: List[str] = [],
-        time_to_print: Union[List[str], None] = None,
-        what_to_print: Union[List[str], None] = None,
-        config_fname: Union[str, None] = None,
-        config_dict: Union[dict, None] = None,
+        time_to_print: Optional[List[str]] = None,
+        what_to_print: Optional[List[str]] = None,
+        config_fname: Optional[str] = None,
+        config_dict: Optional[dict] = None,
         seed_id: Union[str, int] = "no_seed_provided",
         overwrite: bool = False,
         use_tboard: bool = False,
-        log_every_j_steps: Union[int, None] = None,
-        print_every_k_updates: Union[int, None] = 1,
+        use_wandb: bool = False,
+        wandb_config: Optional[dict] = None,
+        log_every_j_steps: Optional[int] = None,
+        print_every_k_updates: Optional[int] = 1,
         model_type: str = "no-model-type",
-        ckpt_time_to_track: Union[str, None] = None,
-        save_every_k_ckpt: Union[int, None] = None,
-        save_top_k_ckpt: Union[int, None] = None,
-        top_k_metric_name: Union[str, None] = None,
-        top_k_minimize_metric: Union[bool, None] = None,
+        ckpt_time_to_track: Optional[str] = None,
+        save_every_k_ckpt: Optional[int] = None,
+        save_top_k_ckpt: Optional[int] = None,
+        top_k_metric_name: Optional[str] = None,
+        top_k_minimize_metric: Optional[bool] = None,
         reload: bool = False,
         verbose: bool = False,
     ):
+        # Set os hdf file to non locking mode
+        os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
         # Set up tensorboard when/where to log and when to print
         self.use_tboard = use_tboard
+        self.use_wandb = use_wandb
         self.log_every_j_steps = log_every_j_steps
         self.print_every_k_updates = print_every_k_updates
         self.log_save_counter = reload
@@ -79,6 +85,8 @@ class MLELogger(object):
         )
         self.config_fname = config_fname
         self.config_dict = config_dict
+
+        self.get_configs_ready(self.config_fname, self.config_dict)
 
         # Set up the logging directories - copy timestamped config file
         self.setup_experiment(
@@ -101,6 +109,10 @@ class MLELogger(object):
             self.tboard_log = TboardLog(
                 self.experiment_dir,
                 self.seed_id,
+            )
+        if self.use_wandb:
+            self.wandb_log = WandbLog(
+                self.config_dict, self.config_fname, self.seed_id, wandb_config
             )
 
         # MODEL, FIGURE & EXTRA LOGGING SETUP
@@ -156,7 +168,7 @@ class MLELogger(object):
                 self.experiment_dir,
             )
 
-    def setup_experiment(  # noqa: C901
+    def setup_experiment(
         self,
         base_exp_dir: str,
         config_fname: Union[str, None],
@@ -211,6 +223,17 @@ class MLELogger(object):
                 ):
                     shutil.rmtree(os.path.join(self.experiment_dir, "tboards/"))
 
+    def get_configs_ready(
+        self, config_fname: Union[str, None], config_dict: Union[dict, None]
+    ):
+        """Load configuration if provided and set config_dict."""
+        if config_fname is not None:
+            self.config_dict = load_config(config_fname)
+        elif config_dict is not None:
+            self.config_dict = config_dict
+        else:
+            self.config_dict = {}
+
     def create_logging_dir(
         self,
         config_fname: Union[str, None],
@@ -223,7 +246,7 @@ class MLELogger(object):
         if config_fname is not None:
             fname, fext = os.path.splitext(config_fname)
         else:
-            fext = ".yaml"
+            fname, fext = "pholder", ".yaml"
 
         if config_fname is not None:
             config_copy = os.path.join(
@@ -231,7 +254,6 @@ class MLELogger(object):
             )
             shutil.copy(config_fname, config_copy)
             self.config_copy = config_copy
-            self.config_dict = load_config(config_fname)
         elif config_dict is not None:
             config_copy = os.path.join(
                 self.experiment_dir, "config_dict" + fext
@@ -239,10 +261,8 @@ class MLELogger(object):
             with open(config_copy, "w") as outfile:
                 yaml.dump(config_dict, outfile, default_flow_style=False)
             self.config_copy = config_copy
-            self.config_dict = config_dict
         else:
             self.config_copy = "config-not-provided"
-            self.config_dict = {}
 
         # Create .hdf5 logging sub-directory
         os.makedirs(os.path.join(self.experiment_dir, "logs/"), exist_ok=True)
@@ -252,6 +272,7 @@ class MLELogger(object):
         clock_tick: Dict[str, int],
         stats_tick: Dict[str, float],
         model=None,
+        grads=None,
         plot_fig=None,
         extra_obj=None,
         save=False,
@@ -271,7 +292,18 @@ class MLELogger(object):
                 self.stats_log.time_to_track,
                 clock_tick,
                 stats_tick,
+                self.model_log.model_type,
                 model,
+                grads,
+                plot_fig,
+            )
+        if self.use_wandb:
+            self.wandb_log.update(
+                clock_tick,
+                stats_tick,
+                self.model_log.model_type,
+                model,
+                grads,
                 plot_fig,
             )
         # Save the most recent model checkpoint
@@ -335,7 +367,7 @@ class MLELogger(object):
                 if self.what_to_print is None:
                     what_to_p = self.stats_log.what_to_track
                 else:
-                    what_to_p = []
+                    what_to_p = self.what_to_print
                 print_update(
                     time_to_p,
                     what_to_p,
@@ -466,23 +498,24 @@ class MLELogger(object):
         for o_name in self.stats_log.what_to_track:
             data_to_store = self.stats_log.stats_tracked[o_name]
             data_to_store = np.array(data_to_store)
-            if type(data_to_store[0]) == np.ndarray:
-                data_to_store = np.stack(data_to_store)
-                dtype = np.dtype("float32")
-            if type(data_to_store[0]) in [np.str_, str]:
-                dtype = "S5000"
-            if type(data_to_store[0]) in [bytes, np.str_]:
-                dtype = np.dtype("S5000")
-            elif type(data_to_store[0]) == int:
-                dtype = np.dtype("int32")
-            else:
-                dtype = np.dtype("float32")
-            write_to_hdf5(
-                self.log_save_fname,
-                self.seed_id + "/stats/" + o_name,
-                data_to_store,
-                dtype,
-            )
+            if len(data_to_store) > 0:
+                if type(data_to_store[0]) == np.ndarray:
+                    data_to_store = np.stack(data_to_store)
+                    dtype = np.dtype("float32")
+                if type(data_to_store[0]) in [np.str_, str]:
+                    dtype = "S5000"
+                if type(data_to_store[0]) in [bytes, np.str_]:
+                    dtype = np.dtype("S5000")
+                elif type(data_to_store[0]) == int:
+                    dtype = np.dtype("int32")
+                else:
+                    dtype = np.dtype("float32")
+                write_to_hdf5(
+                    self.log_save_fname,
+                    self.seed_id + "/stats/" + o_name,
+                    data_to_store,
+                    dtype,
+                )
 
         # Store data on stored checkpoints - stored every k updates
         if self.model_log.save_every_k_ckpt is not None:

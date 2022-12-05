@@ -3,7 +3,9 @@
 ### Added
 
 - Adds new case to `MetaLog` loading: Single configuration with explicit seed.
-- Adds test coverage for `comms` and `utils`
+- Adds test coverage for `comms` and `utils`.
+- Adds support for storage of vector-valued stats in `log.update`.
+- Adds wandb backend. Based on options `use_wandb` and `wandb_config`.
 
 ### Changed
 

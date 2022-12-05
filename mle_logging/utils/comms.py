@@ -204,9 +204,19 @@ def print_update(
                 width=12,
                 justify="center",
             )
-    row_list = [c_tick[c] for c in time_to_print] + [
-        np.round_(s_tick[s], 3) for s in what_to_print
-    ]
+    row_list_time = []
+    for c in time_to_print:
+        if c in c_tick.keys():
+            row_list_time.append(c_tick[c])
+        else:
+            row_list_time.append("---")
+    row_list_stats = []
+    for s in what_to_print:
+        if s in s_tick.keys():
+            row_list_stats.append(np.round_(s_tick[s], 3))
+        else:
+            row_list_stats.append("---")
+    row_list = row_list_time + row_list_stats
     row_str_list = [str(v) for v in row_list]
     table.add_row(*row_str_list)
 
