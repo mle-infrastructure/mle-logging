@@ -15,6 +15,7 @@
 
 - Fixes different data types issues (#3)
 - Fixes string decoding and merging for `MetaLog`
+- Log aggregation for single seed/single configuration
 
 ## [v0.0.4] - [12/07/2021]
 

@@ -4,6 +4,6 @@ torch
 tensorboard
 tensorflow
 dm-haiku
-sklearn
+scikit-learn
 jax
 jaxlib
