@@ -91,7 +91,8 @@ def test_load_single():
 
     # Log some data
     log = MLELogger(**log_config)
-    log.update(time_tic1, stats_tic1, model, fig, some_dict, save=True)
+    log.update(time_tic1, stats_tic1, model,
+               plot_fig=fig, extra_obj=some_dict, save=True)
 
     # Reload log and check correctness of results
     relog = load_log(log_config["experiment_dir"])
@@ -137,10 +138,12 @@ def test_merge_load_seeds():
 
     # Log some data for both seeds
     log_seed1 = MLELogger(**log_config1_seed1)
-    log_seed1.update(time_tic1, stats_tic1, model, fig, some_dict, save=True)
+    log_seed1.update(time_tic1, stats_tic1, model,
+                     plot_fig=fig, extra_obj=some_dict, save=True)
 
     log_seed2 = MLELogger(**log_config1_seed2)
-    log_seed2.update(time_tic2, stats_tic2, model, fig, some_dict, save=True)
+    log_seed2.update(time_tic2, stats_tic2, model,
+                     plot_fig=fig, extra_obj=some_dict, save=True)
 
     experiment_dir = log_config["experiment_dir"] + "config_1/"
     merged_path = os.path.join(experiment_dir, "logs", "config_1.hdf5")
@@ -155,7 +158,7 @@ def test_merge_load_seeds():
     assert log.seed_2.stats.train_loss == 0.2
 
     # Load the merged & aggregated log
-    log = load_log(experiment_dir, aggregate_seeds=True)
+    log = load_log(experiment_dir, aggregate_seeds=True).eval
     assert np.isclose(log.stats.train_loss.mean[0], np.mean([0.1234, 0.2]))
     assert np.isclose(log.stats.train_loss.std[0], np.std([0.1234, 0.2]))
 

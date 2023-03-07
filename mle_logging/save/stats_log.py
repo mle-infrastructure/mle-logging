@@ -80,17 +80,19 @@ class StatsLog(object):
 
     def reload(self):
         """Reload results from previous experiment run."""
-        reloaded_log = load_log(self.experiment_dir)
+        reloaded_log = load_log(self.experiment_dir,
+                                aggregate_seeds=False,
+                                reload_log=True)
         self.clock_tracked, self.stats_tracked = {}, {}
         self.what_to_track, self.time_to_track = [], []
         # Make sure to reload in results for correct seed
-        if reloaded_log.eval_ids is None:
-            for k in reloaded_log.time.keys():
+        if reloaded_log.eval_ids[0] == "no_seed_provided":
+            for k in reloaded_log["no_seed_provided"].time.keys():
                 self.time_to_track.append(k)
-                self.clock_tracked[k] = reloaded_log.time[k].tolist()
-            for k in reloaded_log.stats.keys():
+                self.clock_tracked[k] = reloaded_log["no_seed_provided"].time[k].tolist()
+            for k in reloaded_log["no_seed_provided"].stats.keys():
                 self.what_to_track.append(k)
-                self.stats_tracked[k] = reloaded_log.stats[k].tolist()
+                self.stats_tracked[k] = reloaded_log["no_seed_provided"].stats[k].tolist()
         else:
             for k in reloaded_log[self.seed_id].time.keys():
                 self.time_to_track.append(k)

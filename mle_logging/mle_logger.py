@@ -272,9 +272,9 @@ class MLELogger(object):
         clock_tick: Dict[str, int],
         stats_tick: Dict[str, float],
         model=None,
-        grads=None,
         plot_fig=None,
         extra_obj=None,
+        grads=None,
         save=False,
     ) -> None:
         """Update with the newest tick of performance stats, net weights"""

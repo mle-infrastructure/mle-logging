@@ -5,7 +5,9 @@ import collections
 from ..meta_log import MetaLog
 
 
-def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
+def load_meta_log(log_fname: str,
+                  aggregate_seeds: bool = True,
+                  reload_log: bool = False) -> MetaLog:
     """Load in logging results & mean the results over different runs"""
     assert os.path.exists(log_fname), f"File {log_fname} does not exist."
     # Open File & Get array names to load in
@@ -82,14 +84,19 @@ def load_meta_log(log_fname: str, aggregate_seeds: bool = True) -> MetaLog:
         result_dict = aggregate_over_seeds(
             result_dict, batch_case=case_2 or case_3 or case_4
         )
-
-    return MetaLog(
+    print(result_dict)
+    meta_log = MetaLog(
         DotMap(result_dict, _dynamic=False),
         non_aggregated=(not aggregate_seeds and case_3),
     )
+    if meta_log.eval_ids[0] == "no_seed_provided" and not reload_log:
+        meta_log = meta_log.no_seed_provided
+    return meta_log
 
 
-def load_log(experiment_dir: str, aggregate_seeds: bool = False) -> MetaLog:
+def load_log(experiment_dir: str,
+             aggregate_seeds: bool = False,
+             reload_log: bool = False) -> MetaLog:
     """Load a single .hdf5 log from <experiment_dir>/logs."""
     if experiment_dir.endswith(".hdf5"):
         log_path = experiment_dir
@@ -103,5 +110,5 @@ def load_log(experiment_dir: str, aggregate_seeds: bool = False) -> MetaLog:
             print(f"Multiple .hdf5 files available: {log_paths}")
             print(f"Continue using: {log_paths[0]}")
         log_path = log_paths[0]
-    run_log = load_meta_log(log_path, aggregate_seeds)
+    run_log = load_meta_log(log_path, aggregate_seeds, reload_log)
     return run_log

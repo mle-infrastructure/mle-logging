@@ -193,10 +193,12 @@ class ModelLog(object):
 
     def reload(self):
         """Reload results from previous experiment run."""
-        reloaded_log = load_log(self.experiment_dir)
+        reloaded_log = load_log(self.experiment_dir,
+                                aggregate_seeds=False,
+                                reload_log=True)
         # Make sure to reload in results for correct seed
-        if reloaded_log.eval_ids is None:
-            meta_data = reloaded_log.meta
+        if reloaded_log.eval_ids[0] == "no_seed_provided":
+            meta_data = reloaded_log["no_seed_provided"].meta
         else:
             meta_data = reloaded_log[self.seed_id].meta
 

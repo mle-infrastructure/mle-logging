@@ -51,10 +51,6 @@ class MetaLog(object):
                         self.meta_log[run_id][seed_id]
                     )
 
-        # Make log shallow if there is only a single experiment stored
-        # if self.num_configs == 1:
-        #     self.meta_log = self.meta_log[ph_run]
-
         # Make possible that all runs are accessible via attribute as in pd
         for key in self.meta_log:
             setattr(self, key, self.meta_log[key])
