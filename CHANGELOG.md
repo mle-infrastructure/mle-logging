@@ -1,4 +1,4 @@
-## [v0.0.5] - [Unreleased]
+## [v0.0.5] - [03/2023]
 
 ### Added
 
@@ -16,6 +16,7 @@
 - Fixes different data types issues (#3)
 - Fixes string decoding and merging for `MetaLog`
 - Log aggregation for single seed/single configuration
+- Fixed package dependencies to include pandas
 
 ## [v0.0.4] - [12/07/2021]
 

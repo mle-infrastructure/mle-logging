@@ -47,11 +47,14 @@ class TboardLog(object):
         if model is not None:
             if model_type == "torch":
                 for name, param in model.named_parameters():
-                    self.writer.add_histogram(
-                        "weights/" + name,
-                        param.clone().cpu().data.numpy(),
-                        time_var_id,
-                    )
+                    try:
+                        self.writer.add_histogram(
+                            "weights/" + name,
+                            param.clone().cpu().data.numpy(),
+                            time_var_id,
+                        )
+                    except Exception:
+                        continue
                     # Try getting gradients from torch model
                     try:
                         self.writer.add_histogram(
