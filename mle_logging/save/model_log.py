@@ -36,6 +36,7 @@ class ModelLog(object):
         self.ckpt_time_to_track = ckpt_time_to_track
         self.top_k_metric_name = top_k_metric_name
         self.top_k_minimize_metric = top_k_minimize_metric
+        self.seed_id = seed_id
 
         if self.save_every_k_ckpt:
             assert self.ckpt_time_to_track is not None

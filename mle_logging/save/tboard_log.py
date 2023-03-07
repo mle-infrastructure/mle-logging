@@ -72,11 +72,14 @@ class TboardLog(object):
                                 time_var_id,
                             )
                     except Exception:
-                        self.writer.add_histogram(
-                            "weights/" + layer,
-                            np.array(model[layer]),
-                            time_var_id,
-                        )
+                        try:
+                            self.writer.add_histogram(
+                                "weights/" + layer,
+                                np.array(model[layer]),
+                                time_var_id,
+                            )
+                        except Exception:
+                            pass
 
         # Add the plot of interest to tboard
         if plot_to_tboard is not None:

@@ -27,17 +27,6 @@ def setup_wandb_env(wandb_config: dict):
     os.environ["WANDB_SILENT"] = "true"
     os.environ["WANDB_DISABLE_SERVICE"] = "true"
 
-    # # Additional redirecting of temp files for slurm (?)
-    # try:
-    #     sp.check_output(["squeue"])
-    #     use_slurm = True
-    # except Exception:
-    #     use_slurm = False
-    # if use_slurm:
-    #     os.environ["TMPDIR"] = "/home/repldba/tempfiles"
-    #     # os.environ["TMPDIR"] = "~/wandb_tmp"
-    #     # pass
-
 
 class WandbLog(object):
     """Weights&Biases Logger Class Instance."""

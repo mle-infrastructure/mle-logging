@@ -117,10 +117,6 @@ class MetaLog(object):
     def eval_ids(self) -> Union[int, None]:
         """Get ids of runs stored in meta_log instance."""
         return list(self.meta_log.keys())
-        # if self.num_configs > 1:
-        #     return list(self.meta_log.keys())
-        # else:
-        #     print("Only single aggregated configuration or random seed loaded.")
 
     def __len__(self) -> int:
         """Return number of runs stored in meta_log."""

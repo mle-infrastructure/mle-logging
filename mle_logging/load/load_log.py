@@ -84,13 +84,13 @@ def load_meta_log(log_fname: str,
         result_dict = aggregate_over_seeds(
             result_dict, batch_case=case_2 or case_3 or case_4
         )
-    print(result_dict)
     meta_log = MetaLog(
         DotMap(result_dict, _dynamic=False),
         non_aggregated=(not aggregate_seeds and case_3),
     )
-    if meta_log.eval_ids[0] == "no_seed_provided" and not reload_log:
-        meta_log = meta_log.no_seed_provided
+    if meta_log.eval_ids is not None:
+        if meta_log.eval_ids[0] == "no_seed_provided" and not reload_log:
+            meta_log = meta_log.no_seed_provided
     return meta_log
 
 
