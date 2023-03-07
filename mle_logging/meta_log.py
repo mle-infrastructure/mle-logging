@@ -24,14 +24,14 @@ class MetaLog(object):
         # Return shallow log if there is only a single experiment stored
         self.num_configs = len(list(meta_log.keys()))
         ph_run = list(meta_log.keys())[0]
+        ph_seed = list(meta_log[ph_run].keys())[0]
 
         # Extract different variable names from meta log
-        if not non_aggregated:
+        if not non_aggregated and ph_seed in ["meta", "stats", "time"]:
             self.meta_vars = list(meta_log[ph_run].meta.keys())
             self.stats_vars = list(meta_log[ph_run].stats.keys())
             self.time_vars = list(meta_log[ph_run].time.keys())
         else:
-            ph_seed = list(meta_log[ph_run].keys())[0]
             self.meta_vars = list(meta_log[ph_run][ph_seed].meta.keys())
             self.stats_vars = list(meta_log[ph_run][ph_seed].stats.keys())
             self.time_vars = list(meta_log[ph_run][ph_seed].time.keys())
@@ -39,9 +39,12 @@ class MetaLog(object):
         # Decode all byte strings in meta data
         for run_id in self.meta_log.keys():
             if "meta" in self.meta_log[run_id].keys():
-                self.meta_log[run_id] = decode_meta_strings(
-                    self.meta_log[run_id]
-                )
+                try:
+                    self.meta_log[run_id] = decode_meta_strings(
+                        self.meta_log[run_id]
+                    )
+                except Exception:
+                    pass
             else:
                 for seed_id in self.meta_log[run_id].keys():
                     self.meta_log[run_id][seed_id] = decode_meta_strings(
@@ -49,8 +52,8 @@ class MetaLog(object):
                     )
 
         # Make log shallow if there is only a single experiment stored
-        if self.num_configs == 1:
-            self.meta_log = self.meta_log[ph_run]
+        # if self.num_configs == 1:
+        #     self.meta_log = self.meta_log[ph_run]
 
         # Make possible that all runs are accessible via attribute as in pd
         for key in self.meta_log:
@@ -117,10 +120,11 @@ class MetaLog(object):
     @property
     def eval_ids(self) -> Union[int, None]:
         """Get ids of runs stored in meta_log instance."""
-        if self.num_configs > 1:
-            return list(self.meta_log.keys())
-        else:
-            print("Only single aggregated configuration or random seed loaded.")
+        return list(self.meta_log.keys())
+        # if self.num_configs > 1:
+        #     return list(self.meta_log.keys())
+        # else:
+        #     print("Only single aggregated configuration or random seed loaded.")
 
     def __len__(self) -> int:
         """Return number of runs stored in meta_log."""
@@ -143,7 +147,7 @@ def decode_meta_strings(log: DotMap):
     """Decode all bytes encoded strings."""
     for k in log.meta.keys():
         temp_list = []
-        if type(log.meta[k]) != str:
+        if type(log.meta[k]) != str and type(log.meta[k]) != dict:
             list_to_loop = (
                 log.meta[k].tolist()
                 if type(log.meta[k]) != list
@@ -164,7 +168,7 @@ def decode_meta_strings(log: DotMap):
         if len(temp_list) == 1:
             if k == "config_dict":
                 # Convert config into dict
-                config_dict = ast.literal_eval(temp_list[0])
+                config_dict = ast.literal_eval(str(temp_list[0]))
                 log.meta[k] = config_dict
             else:
                 log.meta[k] = temp_list[0]

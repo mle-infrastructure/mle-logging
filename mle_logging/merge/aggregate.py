@@ -28,7 +28,7 @@ def aggregate_over_seeds(
     return DotMap(new_results_dict, _dynamic=False)
 
 
-def aggregate_single_eval(  # noqa: C901
+def aggregate_single_eval(
     result_dict: dict, all_seeds_for_run: list, eval_name: str
 ) -> dict:
     """Mean over seeds of single config run."""
